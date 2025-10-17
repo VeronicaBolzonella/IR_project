@@ -7,12 +7,13 @@ import torch
 from pyserini.search.lucene import LuceneSearcher
 
 class Reranker():
-    def __init__(self, searcher):
-        self.encoder = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+    def __init__(self, model_name = 'cross-encoder/ms-marco-MiniLM-L-6-v2'):
+        self.encoder = AutoModelForSequenceClassification.from_pretrained(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.encoder.to(self.device).eval()
 
     def rank(self, index, queries):
-        self.encoder.eval()
         searcher = LuceneSearcher(index)
         results = {}
 
@@ -26,11 +27,23 @@ class Reranker():
                 doc = searcher.doc(hit.docid).raw()
                 docs.append(doc)
         
-            features = self.tokenizer(q, docs, padding=True, truncation=True, return_tensors='pt')
+            features = self.tokenizer([q]*len(docs), 
+                                      docs, 
+                                      padding=True, 
+                                      truncation=True, 
+                                      return_tensors='pt').to(self.device)
             with torch.no_grad():
-                score = self.encoder(**features).logits
-            results[qid] = score
-                    
+                scores = self.encoder(**features).logits
+
+            top_indices = torch.topk(scores, k=3).indices
+            top_docs = [docs[i] for i in top_indices]
+            top_scores = scores[top_indices]
+
+            results[qid] = list(zip(top_docs, top_scores.tolist()))
+        
+        return results
+
+                  
 
         
 model = Reranker()
