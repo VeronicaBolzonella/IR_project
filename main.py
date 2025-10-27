@@ -29,7 +29,8 @@ def main():
 if __name__ == '__main__':
     main()
 
-# (move this to README eventually) example usage: 
+# TODO: move this to README eventually
+# example usage: 
 # python3 main.py --queries 'data/longfact-objects_gaming.jsonl' --index "indexes/wiki_dump_index"
 # if you get module models not found make sure to add your working directory to the python path:
 # export PYTHONPATH="${PYTHONPATH}:~/path/to/this/project"  
