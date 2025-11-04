@@ -28,7 +28,6 @@ class Reranker():
         self.tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.encoder.to(self.device).eval()
-        self.searcher
 
     def _extract_text(self, searcher, docid:int):
         """
@@ -82,9 +81,6 @@ class Reranker():
         results = {}
 
         for qid, q in queries.items():
-            print("Query number, ", qid)
-            print("Query text: ", q)
-
             # First Pass BM25 (Lucene)
             hits = searcher.search(q, k=1000)
             
@@ -103,7 +99,6 @@ class Reranker():
             # inference_mode doesn't compute gradients and renders it impossible to re-enable them 
             with torch.inference_mode():
                 logits = self.encoder(**features).logits
-            print("Shape of the logits: ", logits.shape)
 
             # ([1000,1]) to ()
             logits = logits.squeeze(-1)
@@ -111,7 +106,6 @@ class Reranker():
             top_i = torch.topk(logits, k=3).indices.tolist()
             top_docs = [docids[i] for i in top_i]
             top_scores = [logits[i].item() for i in top_i]
-            print(f"Top 3 docs and scores: \n{top_docs} \n{top_scores}")
             results[qid] = list(zip(top_docs, top_scores))
 
         return results
