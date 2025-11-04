@@ -16,7 +16,7 @@ def main():
     model = Reranker()
 
     queries = {}
-    with open(args.data_jsonl, 'r', encoding='utf-8') as f:
+    with open(args.queries, 'r', encoding='utf-8') as f:
         id = 0
     for line in f:
         query = json.loads(line)
