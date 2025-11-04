@@ -30,7 +30,7 @@ class Reranker():
         self.encoder.to(self.device).eval()
         self.searcher
 
-    def _extract_text(self, docid:int):
+    def _extract_text(self, searcher, docid:int):
         """
             Extracts the raw text content of a document from a Lucene index, 
             given its document ID.
@@ -46,7 +46,7 @@ class Reranker():
                 a raw field (eg --storeRaw)
 
         """
-        doc = self.searcher.doc(docid)
+        doc = searcher.doc(docid)
         if doc is None:
             return ""
         # Raw because of setting in indexing.sh
@@ -79,7 +79,6 @@ class Reranker():
         """
 
         searcher = LuceneSearcher(index)
-        self.searcher = searcher
         results = {}
 
         for qid, q in queries.items():
@@ -87,7 +86,7 @@ class Reranker():
             print("Query text: ", q)
 
             # First Pass BM25 (Lucene)
-            hits = searcher.search(q, k=first_pass)
+            hits = searcher.search(q, k=1000)
             
             # Scores per query and document id
             docids = [h.docid for h in hits]
@@ -117,5 +116,5 @@ class Reranker():
 
         return results
 
-                    
+   
     
