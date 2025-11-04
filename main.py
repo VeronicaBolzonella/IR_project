@@ -18,10 +18,10 @@ def main():
     queries = {}
     with open(args.queries, 'r', encoding='utf-8') as f:
         id = 0
-    for line in f:
-        query = json.loads(line)
-        id += 1
-        queries[id] = query["prompt"]
+        for line in f:
+            query = json.loads(line)
+            id += 1
+            queries[id] = query["prompt"]
 
     model.rank(args.index, queries)
 
