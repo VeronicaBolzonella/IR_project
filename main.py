@@ -2,35 +2,17 @@ import json
 import argparse
 
 from models.rerankmodel import Reranker
+from evaluation.ue import generate_with_ue
 
 def main():
-    """
-        Instantiates the model, creates the queries dictionary and ranks the documents 
-        accrding to given index.
-    """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--queries", type=str, required=True, help="Path to the queries jsonl file")
-    parser.add_argument("--index", type=str, default=1, help="Path to the index folder")
+    parser.add_argument("--prompt", type=str, default='what is the capital of Italy?', help="Prompt to model")
+    
     args = parser.parse_args()
 
-    model = Reranker()
-
-    queries = {}
-    with open(args.queries, 'r', encoding='utf-8') as f:
-        id = 0
-        for line in f:
-            query = json.loads(line)
-            id += 1
-            queries[id] = query["prompt"]
-
-    model.rank(args.index, queries)
+    output = generate_with_ue(args.prompt)
+    print(output)
 
 
 if __name__ == '__main__':
     main()
-
-# TODO: move this to README eventually
-# example usage: 
-# python3 main.py --queries 'data/longfact-objects_gaming.jsonl' --index "indexes/wiki_dump_index"
-# if you get module models not found make sure to add your working directory to the python path:
-# export PYTHONPATH="${PYTHONPATH}:~/path/to/this/project"  
