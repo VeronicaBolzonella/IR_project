@@ -82,7 +82,7 @@ class Reranker():
 
         for qid, q in queries.items():
             # First Pass BM25 (Lucene)
-            hits = searcher.search(q, k=1000)
+            hits = searcher.search(q, k=first_pass)
             
             # Scores per query and document id
             docids = [h.docid for h in hits]
