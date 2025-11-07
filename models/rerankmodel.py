@@ -13,15 +13,26 @@ class Reranker():
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.encoder.to(self.device).eval()
 
-    def rank(self, index, queries):
-
+    def rank(self, index, queries, fast=True):
+        # If fast = True, only do the BM25 without the cross-encoder
         searcher = LuceneSearcher(index)
+        
         results = {}
+        
+        if fast:
+            for qid, q in queries.items():
+                hits = searcher.search(q, k=3)
+                docsid = [h.docid for h in hits]
+                results[qid] = list(docsid)
+            
+            print("Fast ranking results: ", results)
+            return results
+    
 
         for qid, q in queries.items():
             print("Query number, ", qid)
             print("Query text: ", q)
-
+            
             # First Pass BM25 (Lucene)
             hits = searcher.search(q, k=1000)
             
@@ -68,52 +79,3 @@ class Reranker():
         # Raw because of setting in indexing.sh
         return doc.raw()
 
-
-
-model = Reranker()
-
-queries = {}
-
-with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
-    id = 0
-    for line in f:
-        query = json.loads(line)
-        id += 1
-        queries[id] = query["prompt"]
-
-model.rank("indexes/wiki_dump_index", queries)
-
-
-
-# # Lucene Searcher
-
-# searcher = LuceneSearcher('indexes/wiki_dump_index')
-
-# hits = searcher.search
-# for qid, q in queries.items():
-        
-#         # First Pass BM25 (Lucene)
-#         hits = searcher.search(q, k=1000)
-        
-#         # Scores per query and document id
-#         for i in range(len(hits)):
-#             res = [qid, hits[i].docid, hits[i].score]
-        
-#         #print(res)
-        
-# # Cross Encoder
-
-# model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
-# tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
-# model.eval()
-
-# results = {}
-
-# for qid, q in queries.items():
-#     features = tokenizer(q, padding=True, truncation=True, return_tensors='pt')
-#     with torch.no_grad():
-#         score = model(**features).logits
-#     results[qid] = score
-
-# for qid, score in results.items():
-#     print(f"Query {qid}: score={score}")
