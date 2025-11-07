@@ -7,44 +7,61 @@ import torch
 from pyserini.search.lucene import LuceneSearcher
 
 class Reranker():
-    """
-        Reranker retrieval system. Ranks a corpus according to given queries and returns the 
-        top three matches for each query according. Rank is performed using BM25 (Lucene) first,
-        and reranking the top hits with an transformer-based cross-encoder. 
-
-        Attributes:
-            encoder (AutoModelForSequenceClassification): 
-                The pretrained cross-encoder model used to compute relevance scores between queries and documents.
-            tokenizer (AutoTokenizer): 
-                The tokenizer corresponding to the encoder model, used to prepare query-document pairs.
-            device (str): 
-                The device used for inference ('cuda' if available, otherwise 'cpu').
-            searcher (LuceneSearcher): 
-                The Lucene searcher instance used for first-pass BM25 retrieval. Set in rank()
-
-    """
     def __init__(self):
         self.encoder = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
         self.tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.encoder.to(self.device).eval()
 
-    def _extract_text(self, searcher, docid:int):
-        """
-            Extracts the raw text content of a document from a Lucene index, 
-            given its document ID.
+    def rank(self, index, queries):
 
-            Args:
-                docid (int): id of document from which to extract text
+        searcher = LuceneSearcher(index)
+        results = {}
 
-            Returns:
-                str: raw text of the document
+        for qid, q in queries.items():
+            print("Query number, ", qid)
+            print("Query text: ", q)
 
-            Note:
-                The text is extracted to raw assuming the document was indexed with
-                a raw field (eg --storeRaw)
+            # First Pass BM25 (Lucene)
+            hits = searcher.search(q, k=1000)
+            
+            # Scores per query and document id
+            docids = [h.docid for h in hits]
+            docs = [self._extract_text(searcher,d) for d in docids]
 
-        """
+            # Batches 
+            batch_size = 32
+            all_logits = []
+            
+            for i in range(0, len(docs), batch_size):
+                batch_docs = docs[i:i + batch_size]
+                
+                features = self.tokenizer(
+                    [q]* len(batch_docs), 
+                    batch_docs, 
+                    padding=True, 
+                    truncation=True, 
+                    return_tensors='pt'
+                    ).to(self.device)
+            
+                # inference_mode doesn't compute gradients and renders it impossible to re-enable them 
+                with torch.inference_mode():
+                    batch_logits = self.encoder(**features).logits.squeeze(-1)
+                    all_logits.append(batch_logits.detach().cpu())
+                    
+                #print("Shape of the logits: ", logits.shape)
+
+            logits = torch.cat(all_logits)
+            top_i = torch.topk(logits, k=3).indices.tolist()
+            top_docs = [docids[i] for i in top_i]
+            top_scores = [logits[i].item() for i in top_i]
+            print(f"Top 3 docs and scores: \n{top_docs} \n{top_scores}")
+            results[qid] = list(zip(top_docs, top_scores))
+
+        return results
+
+                    
+    def _extract_text(self, searcher, docid):
         doc = searcher.doc(docid)
         if doc is None:
             return ""
@@ -52,63 +69,51 @@ class Reranker():
         return doc.raw()
 
 
-    def rank(self, index:str, 
-            queries:dict[int, str], 
-            first_pass:int = 1000
-            )-> dict[str, list[tuple[str, float]]]:
-        """
-        Ranks the corpus index according to the queries using rerank (BM25 + Encoder). 
 
-        Args:
-            index (str): path to the index folder
-            queries (dict[int, str]): dictionary of query id and query content 
-            first_pass (int, optional): Number of top hits reranked by the Encoder. Defaults to 1000.
+model = Reranker()
 
-        Returns:
-            dict[str, list[tuple[str, float]]]: Dictionary of queries and their top 3 documents. 
-            return structure:
-                {
-                    query_id (str): [
-                        (docid (str), score (float)),
-                        (docid (str), score (float)),
-                        (docid (str), score (float))
-                    ],
-                    ... 
-                }
-        """
+queries = {}
 
-        searcher = LuceneSearcher(index)
-        results = {}
+with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
+    id = 0
+    for line in f:
+        query = json.loads(line)
+        id += 1
+        queries[id] = query["prompt"]
 
-        for qid, q in queries.items():
-            # First Pass BM25 (Lucene)
-            hits = searcher.search(q, k=1000)
-            
-            # Scores per query and document id
-            docids = [h.docid for h in hits]
-            docs = [self._extract_text(searcher,d) for d in docids]
+model.rank("indexes/wiki_dump_index", queries)
+
+
+
+# # Lucene Searcher
+
+# searcher = LuceneSearcher('indexes/wiki_dump_index')
+
+# hits = searcher.search
+# for qid, q in queries.items():
         
-            features = self.tokenizer(
-                [q]* len(docs), 
-                docs, 
-                padding=True, 
-                truncation=True, 
-                return_tensors='pt'
-                ).to(self.device)
-            
-            # inference_mode doesn't compute gradients and renders it impossible to re-enable them 
-            with torch.inference_mode():
-                logits = self.encoder(**features).logits
+#         # First Pass BM25 (Lucene)
+#         hits = searcher.search(q, k=1000)
+        
+#         # Scores per query and document id
+#         for i in range(len(hits)):
+#             res = [qid, hits[i].docid, hits[i].score]
+        
+#         #print(res)
+        
+# # Cross Encoder
 
-            # ([1000,1]) to ()
-            logits = logits.squeeze(-1)
-            # print("Shape after squeezing: ", logits)
-            top_i = torch.topk(logits, k=3).indices.tolist()
-            top_docs = [docids[i] for i in top_i]
-            top_scores = [logits[i].item() for i in top_i]
-            results[qid] = list(zip(top_docs, top_scores))
+# model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+# tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+# model.eval()
 
-        return results
+# results = {}
 
-   
-    
+# for qid, q in queries.items():
+#     features = tokenizer(q, padding=True, truncation=True, return_tensors='pt')
+#     with torch.no_grad():
+#         score = model(**features).logits
+#     results[qid] = score
+
+# for qid, score in results.items():
+#     print(f"Query {qid}: score={score}")
