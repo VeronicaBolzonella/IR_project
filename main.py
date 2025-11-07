@@ -17,13 +17,17 @@ def main():
 
     queries = {}
     with open(args.queries, 'r', encoding='utf-8') as f:
+        print("Making queries")
         id = 0
         for line in f:
             query = json.loads(line)
             id += 1
             queries[id] = query["prompt"]
 
+    print("queries ready")
+
     model.rank(args.index, queries)
+    print("ranking ready")
 
 
 if __name__ == '__main__':
