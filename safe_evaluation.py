@@ -50,7 +50,7 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-    output_path = Path("evaluation/outputs") / \
+    output_path = Path("evaluation/safe_outputs") / \
                 f"safe_BM25_celebrities_{timestamp}.jsonl"
 
     # Check if evaluation/outputs exists
