@@ -70,18 +70,18 @@ class Reranker():
 
 
 
-model = Reranker()
+# model = Reranker()
 
-queries = {}
+# queries = {}
 
-with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
-    id = 0
-    for line in f:
-        query = json.loads(line)
-        id += 1
-        queries[id] = query["prompt"]
+# with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
+#     id = 0
+#     for line in f:
+#         query = json.loads(line)
+#         id += 1
+#         queries[id] = query["prompt"]
 
-model.rank("indexes/wiki_dump_index", queries)
+# model.rank("indexes/wiki_dump_index", queries)
 
 
 
