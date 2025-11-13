@@ -27,6 +27,10 @@ from abc import ABC
 from TruthTorchLM.utils.common_utils import generate, fix_tokenizer_chat
 
 from rerankmodel import Reranker
+from pyserini.search.lucene import LuceneSearcher
+
+# Setting for later
+INDEX_PATH = "indexes/wiki_dump_index"
 
 
 SUPPORTED_LABEL = "Supported"
@@ -169,12 +173,28 @@ def call_search(
 
     # 1. Set lucene index path
 
+
     # 2. 
     reranker = Reranker()
 
-    # use reranker.rank(lucene index)
+    # Making it into a dictionary because our rerank model takes a dictionary
+    query_dict = {0: search_query}
 
-    return
+    # INDEX_PATH added as global variable at top of file (wiki dump)
+    # Returns: [(doc_id1, score1),(doc_id2, score2),(doc_id3, score3)]
+    results = reranker.rank(INDEX_PATH, query_dict)
+    
+    # Reshape to => [docid1,docid2,docid3]
+    top_doc_ids = [docid for docid,_ in results[0][:num_searches]]
+
+    # To retrieve the text of the documents
+    searcher = LuceneSearcher(INDEX_PATH)
+
+    # Get docs and return in as one string
+    # GoogleSearchResult expects: 
+    #   query= "..."
+    #   result = "doc1\ndoc2\ndoc3"
+    return "\n".join(searcher.doc(docid).raw() for docid in top_doc_ids)
 
 
 
