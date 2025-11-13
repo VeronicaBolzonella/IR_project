@@ -30,7 +30,7 @@ import TruthTorchLM.long_form_generation.utils.safe_utils as utils
 
 from TruthTorchLM.utils.common_utils import generate, fix_tokenizer_chat
 
-from rerankmodel import Reranker
+from models.rerankmodel import Reranker
 from pyserini.search.lucene import LuceneSearcher
 
 # Global variable which will be set in safe_evaluation.py
