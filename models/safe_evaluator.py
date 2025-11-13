@@ -89,12 +89,14 @@ class ClaimEvaluator(ABC):
         max_steps: int = 5,
         max_retries: int = 10,
         num_searches: int = 3,
+        fast = True, # fast = True means BM25, else BM25+Cross-Encoder 
     ):
         self.rater = rater
         self.tokenizer = tokenizer
         self.max_steps = max_steps
         self.max_retries = max_retries
         self.num_searches = num_searches
+        self.fast = fast
 
     def __call__(self, atomic_fact: str) -> dict:
         return check_atomic_fact(
@@ -104,6 +106,7 @@ class ClaimEvaluator(ABC):
             self.max_steps,
             self.max_retries,
             self.num_searches,
+            fast = self.fast,
         )
 
     def __str__(self):
@@ -204,8 +207,6 @@ def call_search(
 
 
 
-
-
 def maybe_get_next_search(
     atomic_fact: str,
     past_searches: list[GoogleSearchResult],
@@ -213,6 +214,7 @@ def maybe_get_next_search(
     tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = None,
     num_searches: int = 3,
     search_postamble: str = "",  # ex: 'site:https://en.wikipedia.org'
+    fast=True,
     **kwargs,
 ) -> Union[GoogleSearchResult, None]:
     """Get the next query from the model."""
@@ -234,6 +236,7 @@ def maybe_get_next_search(
                 search_query=query,
                 num_searches=num_searches,
                 search_postamble=search_postamble,
+                fast=fast,
             ),
         )
 
@@ -271,6 +274,7 @@ def check_atomic_fact(
     max_retries: int = 10,
     num_searches: int = 3,
     search_postamble: str = "",  # ex: 'site:https://en.wikipedia.org'
+    fast = True,
     **kwargs,
 ) -> tuple[Union[FinalAnswer, None], dict[str, Any]]:
     """Check if the given atomic fact is supported."""
@@ -288,6 +292,7 @@ def check_atomic_fact(
                 tokenizer=tokenizer,
                 num_searches=num_searches,
                 search_postamble=search_postamble,
+                fast=fast,
                 **kwargs,
             )
             num_tries += 1
