@@ -6,55 +6,60 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from models.safe_evaluator import ClaimEvaluator
 
-queries = {}
+def main():
 
-# This should be changed to a function to avoid repetition
-with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
-    id = 0
-    for line in f:
-        query = json.loads(line)
-        id += 1
-        queries[id] = query["prompt"]
+    queries = {}
 
-
-# Loading model
-model_name = "Qwen/Qwen2.5-7B-Instruct"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda") 
+    # This should be changed to a function to avoid repetition
+    with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
+        id = 0
+        for line in f:
+            query = json.loads(line)
+            id += 1
+            queries[id] = query["prompt"]
 
 
-safe = ClaimEvaluator(rater=model,
-        tokenizer = tokenizer,
-        max_steps= 3,
-        max_retries= 3,
-        num_searches= 3,
-        fast = True, # fast = True means BM25, else BM25+Cross-Encoder 
-        )
-
-# Writing outputs to a new json file
-
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Loading model
+    model_name = "Qwen/Qwen2.5-7B-Instruct"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda") 
 
 
-output_path = Path("evaluation/outputs") / \
-              f"safe_BM25_celebrities_{timestamp}.jsonl"
+    safe = ClaimEvaluator(rater=model,
+            tokenizer = tokenizer,
+            max_steps= 3,
+            max_retries= 3,
+            num_searches= 3,
+            fast = True, # fast = True means BM25, else BM25+Cross-Encoder 
+            )
 
-with output_path.open("w", encoding="utf-8") as f:
-    for qid, q in queries.items():
+    # Writing outputs to a new json file
 
-        print(f"Evaluating query {qid}")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        result = safe(q)
 
-        safe_outputs = {
-            "id": qid,
-            "prompt": q,
-            "safe_answer": result["answer"],
-            "safe_response": result["response"],
-            "safe_search_details": result["search_details"]
-        }
+    output_path = Path("evaluation/outputs") / \
+                f"safe_BM25_celebrities_{timestamp}.jsonl"
 
-        f.write(json.dumps(safe_outputs) + "\n")
+    with output_path.open("w", encoding="utf-8") as f:
+        for qid, q in queries.items():
+
+            print(f"Evaluating query {qid}")
+
+            result = safe(q)
+
+            safe_outputs = {
+                "id": qid,
+                "prompt": q,
+                "safe_answer": result["answer"],
+                "safe_response": result["response"],
+                "safe_search_details": result["search_details"]
+            }
+
+            f.write(json.dumps(safe_outputs) + "\n")
+
+if __name__ == "main":
+    main()
 
 
 # For later: already implemented evaluation metrics
