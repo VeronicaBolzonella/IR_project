@@ -17,13 +17,17 @@
 # limitations under the License.
 """Rates a single atomic fact for accuracy."""
 
-import dataclasses
+# Standard python libraries
+import dataclasses #
 import re
 from typing import Union, Any
+from abc import ABC
+
+# Add to uv.lock
 from litellm import completion
 from transformers import PreTrainedModel, PreTrainedTokenizer, PreTrainedTokenizerFast
 import TruthTorchLM.long_form_generation.utils.safe_utils as utils
-from abc import ABC
+
 from TruthTorchLM.utils.common_utils import generate, fix_tokenizer_chat
 
 from rerankmodel import Reranker
