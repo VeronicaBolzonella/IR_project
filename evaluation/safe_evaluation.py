@@ -1,17 +1,29 @@
+import argparse
 import json
 from datetime import datetime
 from pathlib import Path
 
+
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from models.safe_evaluator import ClaimEvaluator
+from models import safe_evaluator
 
 def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--queries", type=str, required=True, help="Path to the queries jsonl file")
+    parser.add_argument("--index", type=str, default=None, help="Path to the index folder")
+    args = parser.parse_args()
+
+    # Overriding global index variable in safe_evaluator.py
+    if args.index is not None:
+        safe_evaluator.INDEX_PATH = args.index
+        print("Using index path:", safe_evaluator.INDEX_PATH)
 
     queries = {}
 
     # This should be changed to a function to avoid repetition
-    with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
+    with open(args.queries, 'r', encoding='utf-8') as f:
         id = 0
         for line in f:
             query = json.loads(line)
@@ -25,7 +37,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda") 
 
 
-    safe = ClaimEvaluator(rater=model,
+    safe = safe_evaluator.ClaimEvaluator(rater=model,
             tokenizer = tokenizer,
             max_steps= 3,
             max_retries= 3,
@@ -41,6 +53,9 @@ def main():
     output_path = Path("evaluation/outputs") / \
                 f"safe_BM25_celebrities_{timestamp}.jsonl"
 
+    # Check if evaluation/outputs exists
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
     with output_path.open("w", encoding="utf-8") as f:
         for qid, q in queries.items():
 
@@ -58,7 +73,7 @@ def main():
 
             f.write(json.dumps(safe_outputs) + "\n")
 
-if __name__ == "main":
+if __name__ == "__main__":
     main()
 
 

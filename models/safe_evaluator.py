@@ -33,8 +33,8 @@ from TruthTorchLM.utils.common_utils import generate, fix_tokenizer_chat
 from rerankmodel import Reranker
 from pyserini.search.lucene import LuceneSearcher
 
-# Setting for later
-INDEX_PATH = "indexes/wiki_dump_index"
+# Global variable which will be set in safe_evaluation.py
+INDEX_PATH = None
 
 
 SUPPORTED_LABEL = "Supported"
