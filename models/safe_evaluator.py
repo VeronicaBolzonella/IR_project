@@ -169,12 +169,18 @@ def call_search(
     # serper_searcher = utils.SerperAPI(k=num_searches)
     # return serper_searcher.run(search_query, k=num_searches)
     
+    # NOTE: search_postamble is a google thing, will not be utilised
+    # Fast variable needs to be implemented into rerankmodel, 
+    # in the meantime BM25 is implemented directly here
+    
     # IMPLEMENTATION:
 
-    # 1. Set lucene index path
+    # BM25 Implementation
+    if fast:
+        searcher = LuceneSearcher(INDEX_PATH)
+        hits = searcher.search(search_query, k=num_searches)
+        return "\n".join(searcher.doc(h.docid).raw() for h in hits)
 
-
-    # 2. 
     reranker = Reranker()
 
     # Making it into a dictionary because our rerank model takes a dictionary
