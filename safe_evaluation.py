@@ -76,7 +76,7 @@ def main():
         # TESTING WITH ONLY 5 QUERIES
         # ------------------------------------------
 
-        for qid, q in queries.items()[:5]:
+        for qid, q in list(queries.items())[:5]:
 
             print(f"Evaluating query {qid}", flush=True)
 
