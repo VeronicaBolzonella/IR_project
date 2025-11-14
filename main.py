@@ -23,7 +23,7 @@ def main():
             id += 1
             queries[id] = query["prompt"]
 
-    model.rank(args.index, queries)
+    model.rank(args.index, queries, fast=True)
 
 
 if __name__ == '__main__':
