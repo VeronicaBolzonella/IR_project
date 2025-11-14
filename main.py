@@ -25,7 +25,7 @@ def main():
             queries[id] = query["prompt"]
 
     print("queries ready")
-
+    print("ranking...")
     model.rank(args.index, queries)
     print("ranking ready")
 
