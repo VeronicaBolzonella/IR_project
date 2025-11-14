@@ -43,9 +43,9 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     # Perhaps remove cuda
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-        # .to("cuda") 
+    model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda") 
     print(">>> Model Loaded", flush=True)
+    print(">>> Model device:", next(model.parameters()).device, flush=True)
 
     print("Initialising SAFE", flush=True)
 
@@ -80,6 +80,7 @@ def main():
 
             print(f"Evaluating query {qid}", flush=True)
 
+            # Possible Infinite Time loop here -> does safe(q) even do anything?
             result = safe(q)
 
             safe_outputs = {
