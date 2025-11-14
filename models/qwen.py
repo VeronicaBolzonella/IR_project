@@ -54,7 +54,7 @@ try:
     client = OpenAI(
         # The API keys for the Singapore and China (Beijing) regions are different. To obtain an API key, see https://modelstudio.console.alibabacloud.com/?tab=model#/api-key
         # If you have not configured an environment variable, replace the following line with your Model Studio API key: api_key="sk-xxx",
-        api_key=os.getenv("API_KEY"),
+        api_key=os.getenv("DASHSCOPE_API_KEY"),
         # The following URL is for the Singapore region. If you use a model in the China (Beijing) region, replace the URL with: https://dashscope.aliyuncs.com/compatible-mode/v1
         base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
     )
