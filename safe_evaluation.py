@@ -84,7 +84,7 @@ def main():
 
         for qid, q in list(queries.items())[:5]:
 
-            print(f"Evaluating query {qid}", flush=True)
+            print(f"Evaluating query {qid}: {q}", flush=True)
 
             # Possible Infinite Time loop here -> does safe(q) even do anything?
             result = safe(q)
