@@ -12,8 +12,8 @@ def generate_with_ue(prompt, model, api=False):
         torch_dtype=torch.float16
     )
     
-    tokenizer = model.tokenizer
-    model = model.model
+    # tokenizer = model.tokenizer
+    # model = model.model
     
     
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty()
