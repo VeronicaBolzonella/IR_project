@@ -34,7 +34,10 @@ def main():
     # Loading model
     model_name = "Qwen/Qwen2.5-7B-Instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda") 
+
+    # Perhaps remove cuda
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+        # .to("cuda") 
 
 
     safe = safe_evaluator.ClaimEvaluator(rater=model,
@@ -42,7 +45,7 @@ def main():
             max_steps= 3,
             max_retries= 3,
             num_searches= 3,
-            fast = True, # fast = True means BM25, else BM25+Cross-Encoder 
+            fast = True, # fast = True means BM25, False BM25+Cross-Encoder 
             )
 
     # Writing outputs to a new json file
@@ -50,7 +53,7 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-    output_path = Path("evaluation/safe_outputs") / \
+    output_path = Path("data/safe_outputs") / \
                 f"safe_BM25_celebrities_{timestamp}.jsonl"
 
     # Check if evaluation/outputs exists
