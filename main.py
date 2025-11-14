@@ -25,6 +25,13 @@ def main():
 
     model.rank(args.index, queries,fast=True)
 
+# Function to create prompts for Qwen (it will go in messages = roles:user, content: ...)
+def create_prompt(query, retrieved_documents):
+    prompt="Based on the following documents, answer the question below.\n"
+    for i, doc in enumerate(retrieved_documents): # assumes this is a list of documents texts, not ids, fix later
+        prompt+= f"Document {i+1}: {doc}\n"
+    prompt+=f"Question: {query}\n Answer:"
+    return prompt
 
 if __name__ == '__main__':
     main()
