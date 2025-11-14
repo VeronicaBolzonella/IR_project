@@ -9,6 +9,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from models import safe_evaluator
 
 def main():
+    print(">>> Starting SAFE evaluation", flush=True)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--queries", type=str, required=True, help="Path to the queries jsonl file")
@@ -22,6 +23,8 @@ def main():
 
     queries = {}
 
+    print(">>> Processing queries")
+
     # This should be changed to a function to avoid repetition
     with open(args.queries, 'r', encoding='utf-8') as f:
         id = 0
@@ -32,13 +35,19 @@ def main():
 
 
     # Loading model
+
+    # ------------------------------------------------------------------------------
+    # LOAD MODEL FROM QWEN.PY
+    print(">>> Loading Model...", flush=True)
     model_name = "Qwen/Qwen2.5-7B-Instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     # Perhaps remove cuda
     model = AutoModelForCausalLM.from_pretrained(model_name)
         # .to("cuda") 
+    print(">>> Model Loaded", flush=True)
 
+    print("Initialising SAFE", flush=True)
 
     safe = safe_evaluator.ClaimEvaluator(rater=model,
             tokenizer = tokenizer,
@@ -48,6 +57,7 @@ def main():
             fast = True, # fast = True means BM25, False BM25+Cross-Encoder 
             )
 
+    print(">>> SAFE Model Ready", flush=True)
     # Writing outputs to a new json file
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -58,11 +68,17 @@ def main():
 
     # Check if evaluation/outputs exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print("Writing Output")
     
     with output_path.open("w", encoding="utf-8") as f:
-        for qid, q in queries.items():
+        # ------------------------------------------
+        # TESTING WITH ONLY 5 QUERIES
+        # ------------------------------------------
 
-            print(f"Evaluating query {qid}")
+        for qid, q in queries.items()[:5]:
+
+            print(f"Evaluating query {qid}", flush=True)
 
             result = safe(q)
 
