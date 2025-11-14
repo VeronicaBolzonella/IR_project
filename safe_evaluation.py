@@ -7,6 +7,12 @@ from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from models import safe_evaluator
+import TruthTorchLM.long_form_generation.utils.safe_utils as safe_utils
+
+# Disable TTY-dependent printing in SAFE -> SAFE tries to print on an interactive terminal
+#  But that's not possible in SLURM
+safe_utils.clear_line = lambda: None
+
 
 def main():
     print(">>> Starting SAFE evaluation", flush=True)
