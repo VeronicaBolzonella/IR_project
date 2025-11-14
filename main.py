@@ -1,5 +1,6 @@
 import json
 import argparse
+from itertools import islice
 
 from models.rerankmodel import Reranker
 
@@ -17,10 +18,9 @@ def main():
 
     queries = {}
     with open(args.queries, 'r', encoding='utf-8') as f:
-        id = 0
-        for line in f:
+        for line in islice(f,50):
             query = json.loads(line)
-            id += 1
+            id = query["qid"]
             queries[id] = query["prompt"]
 
     model.rank(args.index, queries,fast=True)
@@ -31,6 +31,6 @@ if __name__ == '__main__':
 
 # TODO: move this to README eventually
 # example usage: 
-# python3 main.py --queries 'data/longfact-objects_gaming.jsonl' --index "indexes/wiki_dump_index"
+# python3 main.py --queries 'data/factscore_bio.jsonl' --index "indexes/wiki_dump_index"
 # if you get module models not found make sure to add your working directory to the python path:
 # export PYTHONPATH="${PYTHONPATH}:~/path/to/this/project"  
