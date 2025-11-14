@@ -10,7 +10,9 @@ def generate_with_ue(prompt, model, api=True):
 
     truth_methods = [sum_of_eigen]
 
-    tokenizer = AutoTokenizer.from_pretrained(model)
+    #tokenizer = AutoTokenizer.from_pretrained(model)
+    
+    tokenizer=model.tokenizer
     
     messages = [
                 {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
