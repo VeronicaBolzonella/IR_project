@@ -2,7 +2,7 @@ import TruthTorchLM as ttlm
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
+from models.qwen import Qwen
 
 def generate_with_ue(prompt, model, api=True):
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty()
@@ -16,8 +16,8 @@ def generate_with_ue(prompt, model, api=True):
                 {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
                 {"role": "user", "content": prompt}
             ]
-    api = False
-    model = "distilgpt2"  
+    #api = False
+    #model = "distilgpt2"  
 
     if api:
         # Generate text with truth values (api model)
@@ -38,4 +38,6 @@ def generate_with_ue(prompt, model, api=True):
     return output
 
 
-
+model = Qwen()
+ue_values = generate_with_ue("What is the capital of France?", model=model, api=False)
+print(ue_values)
