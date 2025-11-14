@@ -5,17 +5,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from models.qwen import Qwen
 
 def generate_with_ue(prompt, api=False):
-    # tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
-    # model = AutoModelForCausalLM.from_pretrained(
-    #     "Qwen/Qwen2.5-0.5B-Instruct",
-    #     device_map="auto",
-    #     torch_dtype=torch.float16
-    # )
-    
-    # Another model (from TruthTorch examples)
+    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
     model = AutoModelForCausalLM.from_pretrained(
-    "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16).to('cuda:0')
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct", use_fast=False)
+        "Qwen/Qwen2.5-0.5B-Instruct",
+        device_map="auto",
+        torch_dtype=torch.float16
+    )
+    
     
     # This is required for TruthTorch
     # model.config.output_hidden_states = True
