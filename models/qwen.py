@@ -36,3 +36,7 @@ class Qwen():
         response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
         return response
+
+model = Qwen()
+response = model.prompt("What is the capital of France?")
+print(response)
