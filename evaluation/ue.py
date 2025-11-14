@@ -4,16 +4,25 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from models.qwen import Qwen
 
-def generate_with_ue(prompt, model, api=True):
+def generate_with_ue(prompt, api=True):
+    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+    model = AutoModelForCausalLM.from_pretrained(
+        "Qwen/Qwen2.5-0.5B-Instruct",
+        device_map="auto",
+        torch_dtype=torch.float16
+    )
+    
+    # This is required for TruthTorch
+    model.config.output_hidden_states = True
+    model.config.output_attentions = True
+    model.config.return_dict = True
+    
+    
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty()
     # sv to implement
 
     truth_methods = [sum_of_eigen]
 
-    #tokenizer = AutoTokenizer.from_pretrained(model)
-    
-    tokenizer=model.tokenizer
-    
     messages = [
                 {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
                 {"role": "user", "content": prompt}
@@ -40,6 +49,6 @@ def generate_with_ue(prompt, model, api=True):
     return output
 
 
-model = Qwen()
-ue_values = generate_with_ue("What is the capital of France?", model=model, api=False)
+
+ue_values = generate_with_ue("What is the capital of France?", api=False)
 print(ue_values)
