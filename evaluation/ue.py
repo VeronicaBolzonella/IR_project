@@ -17,7 +17,7 @@ def generate_with_ue(prompt, model, api=True):
                 {"role": "user", "content": prompt}
             ]
     api = False
-    model = "distilgpt2"  # small model suitable for CPU
+    model = "distilgpt2"  
 
     if api:
         # Generate text with truth values (api model)
