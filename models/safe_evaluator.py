@@ -210,7 +210,16 @@ def call_search(
     # GoogleSearchResult expects: 
     #   query= "..."
     #   result = "doc1\ndoc2\ndoc3"
-    return "\n".join(searcher.doc(docid).raw() for docid in top_doc_ids)
+
+    # TODO: change return data structure to:
+    return [
+        {"snippet": searcher.doc(docid).raw()} 
+        for docid in top_doc_ids
+    ] 
+
+    #  ---OLD---
+    # print("Returning:\n","\n".join(searcher.doc(docid).raw() for docid in top_doc_ids))
+    # return "\n".join(searcher.doc(docid).raw() for docid in top_doc_ids)
 
 
 
