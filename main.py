@@ -16,6 +16,7 @@ def main():
 
     model = Reranker()
 
+    # Get the Fact Score Bio queries -> used for ranking and qwen
     queries = {}
     with open(args.queries, 'r', encoding='utf-8') as f:
         for line in islice(f,50):
@@ -23,7 +24,12 @@ def main():
             id = query["qid"]
             queries[id] = query["prompt"]
 
+    # Rank documents based on the queries
+    
     model.rank(args.index, queries,fast=True)
+
+
+    
 
 # Function to create prompts for Qwen (it will go in messages = roles:user, content: ...)
 def create_prompt(query, retrieved_documents):
