@@ -2,11 +2,16 @@ import json
 import argparse
 from itertools import islice
 import numpy as np
+import sys
 
 from pyserini.search.lucene import LuceneSearcher
 
 from models.rerankmodel import Reranker
 from evaluation.ue import generate_with_ue
+
+def log(msg):
+    sys.stdout.write(msg + "\n")
+    sys.stdout.flush()
 
 def create_augmented_prompt(prompt, docs):
     docs_prompt = " ".join(doc for doc in docs)
@@ -22,8 +27,10 @@ def main():
     parser.add_argument("--index", type=str, default=1, help="Path to the index folder")
     args = parser.parse_args()
 
+    log("Loading reranker model…")
     model = Reranker()
 
+    log(f"Loading queries from {args.queries}…")
     queries = {}
     with open(args.queries, 'r', encoding='utf-8') as f:
         for line in islice(f,50):
@@ -31,8 +38,10 @@ def main():
             id = query["qid"]
             queries[id] = query["prompt"]
 
+    log("Ranking documents for queries…")
     retreived_docs = model.rank(args.index, queries,fast=True)
-
+    log(f"Ranking complete, computing UEs...")
+    
     sum_of_eigen = []
     semantic_entropy = []
     model_answers = []
@@ -44,6 +53,7 @@ def main():
         semantic_entropy.append(ue['normalized_truth_values'][1])
         model_answers.append(ue['generated_text'])
         # somehow get safe from the same answers
+    log(f"Scores ready")
 
     # todo when 
     # safe_scores_numeric = prepare safe if needed
