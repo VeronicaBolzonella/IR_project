@@ -1,6 +1,7 @@
 import json
 import argparse
 from itertools import islice
+import numpy as np
 
 from pyserini.search.lucene import LuceneSearcher
 
@@ -34,11 +35,27 @@ def main():
 
     sum_of_eigen = []
     semantic_entropy = []
+    model_answers = []
+    safe_scores = []
     for qid, q in queries.items():
         prompt = create_augmented_prompt(q, retreived_docs)
         ue = generate_with_ue(q, model=None, api=True)
         sum_of_eigen.append(ue['normalized_truth_values'][0])
         semantic_entropy.append(ue['normalized_truth_values'][1])
+        model_answers.append(ue['generated_text'])
+        # somehow get safe from the same answers
+
+    # todo when 
+    # safe_scores_numeric = prepare safe if needed
+    # X = np.column_stack([sum_of_eigen, semantic_entropy])
+    # y = np.array(safe_scores_numeric)
+
+    # # Fit linear regression
+    # reg = LinearRegression()
+    # reg.fit(X, y)
+
+    # print("Coefficients (sum_of_eigen, semantic_entropy):", reg.coef_)
+    # print("Intercept:", reg.intercept_)
 
 
 if __name__ == '__main__':
