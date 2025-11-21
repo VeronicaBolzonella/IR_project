@@ -13,10 +13,6 @@ def generate_with_ue(prompt, model=None, api=False):
             torch_dtype=torch.float16
         )
     
-    # tokenizer = model.tokenizer
-    # model = model.model
-    
-    
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty()
     semantic_entropy = ttlm.truth_methods.SemanticEntropy()
     
@@ -26,8 +22,6 @@ def generate_with_ue(prompt, model=None, api=False):
                 {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
                 {"role": "user", "content": prompt}
             ]
-    #api = False
-    #model = "distilgpt2"  
 
     if api:
         # Generate text with truth values (api model)
