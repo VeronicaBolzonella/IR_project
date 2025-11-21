@@ -58,9 +58,9 @@ try:
         # The following URL is for the Singapore region. If you use a model in the China (Beijing) region, replace the URL with: https://dashscope.aliyuncs.com/compatible-mode/v1
         base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
     )
-
+    print(client.api_key)
     completion = client.chat.completions.create(
-        model="qwen2.5-7b-instruct",  
+        model="Qwen2.5-7B-Instruct",  
         messages=[
             {'role': 'system', 'content': 'You are a helpful assistant.'},
             {'role': 'user', 'content': 'Who are you?'}
