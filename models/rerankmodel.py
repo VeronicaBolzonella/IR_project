@@ -13,10 +13,19 @@ class Reranker():
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.encoder.to(self.device).eval()
 
-    def rank(self, index, queries):
-
+    def rank(self, index, queries, fast=True):
+        # If fast = True, only do the BM25 without the cross-encoder
         searcher = LuceneSearcher(index)
         results = {}
+        
+        if fast:
+            for qid, q in queries.items():
+                hits = searcher.search(q, k=3)
+                docsid = [h.docid for h in hits]
+                results[qid] = list(docsid)
+            
+            print("Fast ranking results: ", results)
+            return results
 
         for qid, q in queries.items():
             print("Query number, ", qid)
@@ -56,7 +65,7 @@ class Reranker():
             top_docs = [docids[i] for i in top_i]
             top_scores = [logits[i].item() for i in top_i]
             print(f"Top 3 docs and scores: \n{top_docs} \n{top_scores}")
-            results[qid] = list(zip(top_docs, top_scores))
+            results[qid] = list(top_docs)
 
         return results
 
@@ -70,18 +79,18 @@ class Reranker():
 
 
 
-# model = Reranker()
+model = Reranker()
 
-# queries = {}
+queries = {}
 
-# with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
-#     id = 0
-#     for line in f:
-#         query = json.loads(line)
-#         id += 1
-#         queries[id] = query["prompt"]
+with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
+    id = 0
+    for line in f:
+        query = json.loads(line)
+        id += 1
+        queries[id] = query["prompt"]
 
-# model.rank("indexes/wiki_dump_index", queries)
+model.rank("indexes/wiki_dump_index", queries)
 
 
 

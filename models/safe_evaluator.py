@@ -181,24 +181,33 @@ def call_search(
     # in the meantime BM25 is implemented directly here
     
     # IMPLEMENTATION:
-
-    # BM25 Implementation
-    if fast:
-        searcher = LuceneSearcher(INDEX_PATH)
-        hits = searcher.search(search_query, k=num_searches)
-        return "\n".join(searcher.doc(h.docid).raw() for h in hits)
-
+    searcher = LuceneSearcher(INDEX_PATH)
     reranker = Reranker()
 
     # Making it into a dictionary because our rerank model takes a dictionary
     query_dict = {0: search_query}
 
+    # BM25 Implementation
+    if fast:
+        '''Watch out: different data type'''
+        result_bm25 = reranker.rank(INDEX_PATH, query_dict, fast=True)
+        # Result: {0: [doc_id1, doc_id2, ...]}
+        top_doc_ids_bm25 = result_bm25[0]
+        # hits = searcher.search(search_query, k=num_searches)
+        return "\n".join(searcher.doc(docid).raw() for docid in top_doc_ids_bm25)
+
+    reranker = Reranker()
+
+
+
     # INDEX_PATH added as global variable at top of file (wiki dump)
-    # Returns: [(doc_id1, score1),(doc_id2, score2),(doc_id3, score3)]
-    results = reranker.rank(INDEX_PATH, query_dict)
+    # Returns: {0: [doc_id1, doc_id2, ...]}
+    result = reranker.rank(INDEX_PATH, query_dict, fast=False)
     
     # Reshape to => [docid1,docid2,docid3]
-    top_doc_ids = [docid for docid,_ in results[0][:num_searches]]
+    # top_doc_ids = [docid for docid,_ in results[0][:num_searches]] OLD
+    top_doc_ids = result[0]
+
 
     # To retrieve the text of the documents
     searcher = LuceneSearcher(INDEX_PATH)
