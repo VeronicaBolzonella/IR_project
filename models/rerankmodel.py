@@ -22,7 +22,7 @@ class Reranker():
         if fast:
             for qid, q in queries.items():
                 hits = searcher.search(q, k=3)
-                docsid = [h.docid for h in hits]
+                docids = [h.docid for h in hits]
                 docs = [self._extract_text(searcher,d) for d in docids]  # raw text
                 results[qid] = list(docs)
             
