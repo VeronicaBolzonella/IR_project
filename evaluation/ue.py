@@ -4,13 +4,14 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from models.qwen import Qwen
 
-def generate_with_ue(prompt, model, api=False):
+def generate_with_ue(prompt, model=None, api=False):
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
-    model = AutoModelForCausalLM.from_pretrained(
-        "Qwen/Qwen2.5-0.5B-Instruct",
-        device_map="auto",
-        torch_dtype=torch.float16
-    )
+    if model is None:
+        model = AutoModelForCausalLM.from_pretrained(
+            "Qwen/Qwen2.5-0.5B-Instruct",
+            device_map="auto",
+            torch_dtype=torch.float16
+        )
     
     # tokenizer = model.tokenizer
     # model = model.model

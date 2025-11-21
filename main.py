@@ -2,7 +2,14 @@ import json
 import argparse
 from itertools import islice
 
+from pyserini.search.lucene import LuceneSearcher
+
 from models.rerankmodel import Reranker
+from evaluation.ue import generate_with_ue
+
+def create_augmented_prompt(prompt, docs):
+    docs_prompt = " ".join(doc for doc in docs)
+    return prompt + " " + docs_prompt
 
 def main():
     """
@@ -23,14 +30,16 @@ def main():
             id = query["qid"]
             queries[id] = query["prompt"]
 
-    model.rank(args.index, queries,fast=True)
+    retreived_docs = model.rank(args.index, queries,fast=True)
+
+    sum_of_eigen = []
+    semantic_entropy = []
+    for qid, q in queries.items():
+        prompt = create_augmented_prompt(q, retreived_docs)
+        ue = generate_with_ue(q, model=None, api=True)
+        sum_of_eigen.append(ue['normalized_truth_values'][0])
+        semantic_entropy.append(ue['normalized_truth_values'][1])
 
 
 if __name__ == '__main__':
     main()
-
-# TODO: move this to README eventually
-# example usage: 
-# python3 main.py --queries 'data/factscore_bio.jsonl' --index "indexes/wiki_dump_index"
-# if you get module models not found make sure to add your working directory to the python path:
-# export PYTHONPATH="${PYTHONPATH}:~/path/to/this/project"  
