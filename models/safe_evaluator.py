@@ -189,28 +189,22 @@ def call_search(
 
     # BM25 Implementation
     if fast:
-        '''Watch out: different data type'''
-        result_bm25 = reranker.rank(INDEX_PATH, query_dict, fast=True)
         # Result: {0: [doc_id1, doc_id2, ...]}
+        result_bm25 = reranker.rank(INDEX_PATH, query_dict, fast=True)
         top_doc_ids_bm25 = result_bm25[0]
-        # hits = searcher.search(search_query, k=num_searches)
+        # ---OLD---hits = searcher.search(search_query, k=num_searches)
         return "\n".join(searcher.doc(docid).raw() for docid in top_doc_ids_bm25)
-
-    reranker = Reranker()
-
-
 
     # INDEX_PATH added as global variable at top of file (wiki dump)
     # Returns: {0: [doc_id1, doc_id2, ...]}
     result = reranker.rank(INDEX_PATH, query_dict, fast=False)
     
     # Reshape to => [docid1,docid2,docid3]
-    # top_doc_ids = [docid for docid,_ in results[0][:num_searches]] OLD
+    # ---OLD--- top_doc_ids = [docid for docid,_ in results[0][:num_searches]] 
     top_doc_ids = result[0]
 
 
     # To retrieve the text of the documents
-    searcher = LuceneSearcher(INDEX_PATH)
 
     # Get docs and return in as one string
     # GoogleSearchResult expects: 
