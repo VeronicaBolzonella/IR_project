@@ -43,31 +43,28 @@ class Qwen():
 
 
 
-# QWEN API VERSION - DOES NOT WORK (GIVES ERROR FOR API_KEY)
-# Code from https://modelstudio.console.alibabacloud.com/?tab=doc#/doc/?type=model&url=2840915
+# QWEN API VERSION 
+# code from https://openrouter.ai/docs/docs/overview/models
 # API_KEY => the environment variable in the terminal like this: export API_KEY="your_api_key_here"
 
-import os
 from openai import OpenAI
+import os
 
-try:
-    client = OpenAI(
-        # The API keys for the Singapore and China (Beijing) regions are different. To obtain an API key, see https://modelstudio.console.alibabacloud.com/?tab=model#/api-key
-        # If you have not configured an environment variable, replace the following line with your Model Studio API key: api_key="sk-xxx",
-        api_key=os.getenv("DASHSCOPE_API_KEY"),
-        # The following URL is for the Singapore region. If you use a model in the China (Beijing) region, replace the URL with: https://dashscope.aliyuncs.com/compatible-mode/v1
-        base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-    )
-    print(client.api_key)
-    completion = client.chat.completions.create(
-        model="Qwen2.5-7B-Instruct",  
-        messages=[
-            {'role': 'system', 'content': 'You are a helpful assistant.'},
-            {'role': 'user', 'content': 'Who are you?'}
-            ]
-    )
-    print(completion.choices[0].message.content)
-except Exception as e:
-    print(f"Error message: {e}")
-    print("For more information, see https://www.alibabacloud.com/help/en/model-studio/developer-reference/error-code")
-
+client = OpenAI(
+  base_url="https://openrouter.ai/api/v1",
+  api_key=os.getenv("API_KEY"),
+)
+completion = client.chat.completions.create(
+  extra_headers={
+    "HTTP-Referer": "IR_project", # Optional. Site URL for rankings on openrouter.ai.
+    "X-Title": "IR_project", # Optional. Site title for rankings on openrouter.ai.
+  },
+  model="qwen/qwen-2.5-7b-instruct",
+  messages=[
+    {
+      "role": "user",
+      "content": "What is the meaning of life?"
+    }
+  ]
+)
+print(completion.choices[0].message.content)
