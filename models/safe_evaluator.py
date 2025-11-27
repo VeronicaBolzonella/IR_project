@@ -24,7 +24,7 @@ from typing import Union, Any
 from abc import ABC
 
 # Add to uv.lock
-from litellm import completion
+from litellm import completion # Automatically calls API (need to use OPENROUTER_API_KEY/BASE naming convention for qwen model)
 from transformers import PreTrainedModel, PreTrainedTokenizer, PreTrainedTokenizerFast
 import TruthTorchLM.long_form_generation.utils.safe_utils as utils
 
@@ -32,6 +32,9 @@ from TruthTorchLM.utils.common_utils import generate, fix_tokenizer_chat
 
 from models.rerankmodel import Reranker
 from pyserini.search.lucene import LuceneSearcher
+
+from openai import OpenAI
+import os
 
 # Global variable which will be set in safe_evaluation.py
 INDEX_PATH = None
@@ -140,6 +143,11 @@ class FinalAnswer:
 
 def _generate(prompt, model, tokenizer, **kwargs):
     messages = [{"role": "user", "content": prompt}]
+    
+    # Continue this implementation if it is found that 
+    # Qwen is not compatible with LiteLLM (it should be)
+    # response = openrouter_client.chat.completions.create
+    
     if type(model) == str:
         response = completion(model=model, messages=messages, **kwargs)
         generated_text = response.choices[0].message["content"]
