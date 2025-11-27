@@ -82,7 +82,7 @@ def main():
         # TESTING WITH ONLY 5 QUERIES
         # ------------------------------------------
 
-        for qid, q in list(queries.items())[:5]:
+        for qid, q in list(queries.items())[:2]:
 
             print(f"Evaluating query {qid}: {q}", flush=True)
 
@@ -136,12 +136,14 @@ if __name__ == "__main__":
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --output=output.out
+#SBATCH --error=error.out
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=luca.maas@ru.nl
 
-source /vol/csedu-nobackup/course/I00041_informationretrieval/users/analeopold/IR_project/.venv/bin/activate
+source /vol/csedu-nobackup/course/I00041_informationretrieval/users/lucamaas/IR_project/.venv/bin/activate
+source ~/.bashrc
 
-cd /vol/csedu-nobackup/course/I00041_informationretrieval/users/analeopold/IR_project
+cd /vol/csedu-nobackup/course/I00041_informationretrieval/users/lucamaas/IR_project
 
-#python main.py --queries 'data/longfact-objects_celebrities.jsonl' --index "indexes/wiki_dump_index"
-
-python models/qwen.py
+python3 safe_evaluation.py --queries '/vol/csedu-nobackup/course/I00041_informationretrieval/users/analeopold/IR_project/data/longfact-objects_celebrities.jsonl' --index '/vol/csedu-nobackup/course/I00041_informationretrieval/users/analeopold/IR_project/indexes/wiki_dump_index'
 """
