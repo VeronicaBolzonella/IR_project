@@ -146,10 +146,11 @@ def _generate(prompt, model, tokenizer, **kwargs):
     
     # Continue this implementation if it is found that 
     # Qwen is not compatible with LiteLLM (it should be)
-    # response = openrouter_client.chat.completions.create
+    # response = openrouter_client.chat.compFletions.create
     
     if type(model) == str:
-        response = completion(model=model, messages=messages, **kwargs)
+        # Added seed=42
+        response = completion(model=model, messages=messages, seed=42,**kwargs) 
         generated_text = response.choices[0].message["content"]
     else:
         tokenizer, messages = fix_tokenizer_chat(tokenizer, messages)

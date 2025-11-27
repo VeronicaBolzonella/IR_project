@@ -1,3 +1,4 @@
+import os
 import argparse
 import json
 from datetime import datetime
@@ -44,19 +45,26 @@ def main():
 
     # ------------------------------------------------------------------------------
     # LOAD MODEL FROM QWEN.PY
-    print(">>> Loading Model...", flush=True)
-    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    # Perhaps remove cuda
-    model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda") 
-    print(">>> Model Loaded", flush=True)
-    print(">>> Model device:", next(model.parameters()).device, flush=True)
+    # LOCAL MODEL IMPLEMENTATION:
+    # print(">>> Loading Model...", flush=True)
+    # model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+    # tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    # # Perhaps remove cuda
+    # model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda") 
+    # print(">>> Model Loaded", flush=True)
+    # print(">>> Model device:", next(model.parameters()).device, flush=True)
 
     print("Initialising SAFE", flush=True)
 
+    # Add key  (OPENROUTER_API_KEY) to the .venv/Scripts/activate file -> export OPENROUTER_API_KEY
+    os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
+
+    model = "qwen/qwen-2.5-7b-instruct"
+
     safe = safe_evaluator.ClaimEvaluator(rater=model,
-            tokenizer = tokenizer,
+            # tokenizer = tokenizer, # Not necessary when calling the API
             max_steps= 3,
             max_retries= 3,
             num_searches= 3,
@@ -106,6 +114,8 @@ if __name__ == "__main__":
 # For later: already implemented evaluation metrics
 # sample_level_eval_metrics = ['f1']
 # dataset_level_eval_metrics = ['auroc', 'prr']
+
+# Change files in .venv to include a seed (42)
 
 # results = LFG.evaluate_truth_method_long_form(
 #     dataset='longfact_objects',
