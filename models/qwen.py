@@ -1,3 +1,5 @@
+# QWEN LOCAL (works on the cluster!)
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -36,3 +38,33 @@ class Qwen():
         response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
         return response
+
+
+
+
+
+# QWEN API VERSION 
+# code from https://openrouter.ai/docs/docs/overview/models
+# API_KEY => the environment variable in the terminal like this: export API_KEY="your_api_key_here"
+
+from openai import OpenAI
+import os
+
+client = OpenAI(
+  base_url="https://openrouter.ai/api/v1",
+  api_key=os.getenv("API_KEY"),
+)
+completion = client.chat.completions.create(
+  extra_headers={
+    "HTTP-Referer": "IR_project", # Optional. Site URL for rankings on openrouter.ai.
+    "X-Title": "IR_project", # Optional. Site title for rankings on openrouter.ai.
+  },
+  model="qwen/qwen-2.5-7b-instruct",
+  messages=[
+    {
+      "role": "user",
+      "content": "What is the meaning of life?"
+    }
+  ]
+)
+print(completion.choices[0].message.content)
