@@ -48,7 +48,7 @@ def main():
     safe_scores = []
     for qid, q in queries.items():
         prompt = create_augmented_prompt(q, retreived_docs[qid])
-        ue = generate_with_ue(q, model=None, api=True)
+        ue = generate_with_ue(prompt, model=None, api=True)
         sum_of_eigen.append(ue['normalized_truth_values'][0])
         semantic_entropy.append(ue['normalized_truth_values'][1])
         model_answers.append(ue['generated_text'])
