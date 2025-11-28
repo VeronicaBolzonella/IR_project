@@ -186,8 +186,7 @@ def call_search(
     # return serper_searcher.run(search_query, k=num_searches)
     
     # NOTE: search_postamble is a google thing, will not be utilised
-    # Fast variable needs to be implemented into rerankmodel, 
-    # in the meantime BM25 is implemented directly here
+    # NOTE: num_searches is hard-coded into Reranker
     
     # IMPLEMENTATION:
     searcher = LuceneSearcher(INDEX_PATH)
@@ -277,6 +276,12 @@ def maybe_get_final_answer(
     print("DEBUG FINAL_ANSWER RESPONSE:\n", model_response, "\n", flush=True)
     answer = utils.extract_first_square_brackets(model_response)
     answer = re.sub(r"[^\w\s]", "", answer).strip()
+    
+    # Making it more robust (if the model does not respond in square brackets)
+    if not answer:
+        m = re.search(r"\b(Supported|Not Supported)\b", model_response)
+        if m:
+            answer = m.group(1)
 
     if model_response and answer in [SUPPORTED_LABEL, NOT_SUPPORTED_LABEL]:
         return FinalAnswer(response=model_response, answer=answer)

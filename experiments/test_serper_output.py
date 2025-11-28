@@ -4,7 +4,6 @@ import TruthTorchLM.long_form_generation.utils.safe_utils as utils
 import pprint
 
 # Set Serper API key like this: SERPER_API_KEY
-print("SERPER_API_KEY= ", os.environ.get("SERPER_API_KEY"))
 
 print("Initialising serper searcher")
 serper_searcher = utils.SerperAPI(k=3)

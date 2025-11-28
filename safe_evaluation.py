@@ -19,7 +19,8 @@ def main():
     print(">>> Starting SAFE evaluation", flush=True)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--queries", type=str, required=True, help="Path to the queries jsonl file")
+    # Not necessary -> CHANGE .SH FILE
+    # parser.add_argument("--queries", type=str, required=True, help="Path to the queries jsonl file")
     parser.add_argument("--index", type=str, default=None, help="Path to the index folder")
     args = parser.parse_args()
 
@@ -28,40 +29,11 @@ def main():
         safe_evaluator.INDEX_PATH = args.index
         print("Using index path:", safe_evaluator.INDEX_PATH)
 
-    queries = {}
-
-    print(">>> Processing queries")
-
-    # This should be changed to a function to avoid repetition
-    with open(args.queries, 'r', encoding='utf-8') as f:
-        id = 0
-        for line in f:
-            query = json.loads(line)
-            id += 1
-            queries[id] = query["prompt"]
-
-
-    # Loading model
-
-    # ------------------------------------------------------------------------------
-    # LOAD MODEL FROM QWEN.PY
-
-    # LOCAL MODEL IMPLEMENTATION:
-    # print(">>> Loading Model...", flush=True)
-    # model_name = "Qwen/Qwen2.5-0.5B-Instruct"
-    # tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-    # # Perhaps remove cuda
-    # model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda") 
-    # print(">>> Model Loaded", flush=True)
-    # print(">>> Model device:", next(model.parameters()).device, flush=True)
-
-    print("Initialising SAFE", flush=True)
-
     # Add key  (OPENROUTER_API_KEY) to the .venv/Scripts/activate file -> export OPENROUTER_API_KEY
     os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
 
-    rater = "qwen/qwen-2.5-7b-instruct"
+    rater = "openrouter/qwen/qwen-2.5-7b-instruct"
+    print("Initialising SAFE", flush=True)
 
     safe = safe_evaluator.ClaimEvaluator(rater=rater,
             # tokenizer = tokenizer, # Not necessary when calling the API
@@ -74,23 +46,27 @@ def main():
     print(">>> SAFE Model Ready", flush=True)
     # Writing outputs to a new json file
 
+    # Creating a timestamped output file for debugging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
 
     output_path = Path("data/safe_outputs") / \
                 f"safe_BM25_celebrities_{timestamp}.jsonl"
 
-    # Check if evaluation/outputs exists
+    # Checking if data/safe_outputs exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     print("Writing Output")
     
     with output_path.open("w", encoding="utf-8") as f:
         
+        # Testing safe on some claims
         claims = ["Paris is the capital of France", "Marseille is the capital of France"]
+
         for claim in claims:
+            # Calling safe on the claim
             result = safe(claim)
-            
+
+            # Extracting
             safe_outputs = {
                 "claim": claim,
                 "safe_answer": result["answer"],
