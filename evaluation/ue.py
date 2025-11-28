@@ -68,7 +68,7 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
     # Decomposition method splits the generated text into claims
     decomp_method= StructuredDecompositionAPI(model=model, decomposition_depth=1)
     
-    sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty()
+    sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty(entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu')
     p_true = ttlm.truth_methods.PTrue()
     
     truth_methods = [sum_of_eigen, p_true]
