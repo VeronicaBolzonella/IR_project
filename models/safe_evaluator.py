@@ -212,23 +212,14 @@ def call_search(
     # ---OLD--- top_doc_ids = [docid for docid,_ in results[0][:num_searches]] 
     top_doc_ids = result[0]
 
-
-    # To retrieve the text of the documents
-
     # Get docs and return in as one string
     # GoogleSearchResult expects: 
     #   query= "..."
-    #   result = "doc1\ndoc2\ndoc3"
+    #   result = "doc1 \s ndoc2 \s doc3"
 
-    # TODO: change return data structure to:
-    return [
-        {"snippet": searcher.doc(docid).raw()} 
-        for docid in top_doc_ids
-    ] 
-
-    #  ---OLD---
-    # print("Returning:\n","\n".join(searcher.doc(docid).raw() for docid in top_doc_ids))
-    # return "\n".join(searcher.doc(docid).raw() for docid in top_doc_ids)
+    #  ---CORRECT---
+    print("Returning:\n","\n".join(searcher.doc(docid).raw() for docid in top_doc_ids))
+    return " ".join(searcher.doc(docid).raw() for docid in top_doc_ids)
 
 
 

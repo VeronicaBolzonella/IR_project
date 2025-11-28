@@ -61,9 +61,9 @@ def main():
     # Add key  (OPENROUTER_API_KEY) to the .venv/Scripts/activate file -> export OPENROUTER_API_KEY
     os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
 
-    model = "qwen/qwen-2.5-7b-instruct"
+    rater = "qwen/qwen-2.5-7b-instruct"
 
-    safe = safe_evaluator.ClaimEvaluator(rater=model,
+    safe = safe_evaluator.ClaimEvaluator(rater=rater,
             # tokenizer = tokenizer, # Not necessary when calling the API
             max_steps= 3,
             max_retries= 3,
@@ -86,26 +86,6 @@ def main():
     print("Writing Output")
     
     with output_path.open("w", encoding="utf-8") as f:
-        # ------------------------------------------
-        # TESTING WITH ONLY 5 QUERIES
-        # ------------------------------------------
-
-        # WRONG: SHOULD PASS FACTS TO SAFE, NOT QUERIES
-        # for qid, q in list(queries.items())[:2]:
-
-        #     print(f"Evaluating query {qid}: {q}", flush=True)
-
-        #     # Possible Infinite Time loop here -> does safe(q) even do anything?
-        #     result = safe(q)
-
-        #     safe_outputs = {
-        #         "id": qid,
-        #         "prompt": q,
-        #         "safe_answer": result["answer"],
-        #         "safe_response": result["response"],
-        #         "safe_search_details": result["search_details"]
-        #     }
-        #     f.write(json.dumps(safe_outputs) + "\n")
         
         claims = ["Paris is the capital of France", "Marseille is the capital of France"]
         for claim in claims:

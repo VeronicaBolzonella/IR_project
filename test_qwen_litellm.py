@@ -48,7 +48,7 @@ Sure! Here are four rhyming words:
 
 
 """ 
-Second Test with seed=42
+Second Test with seed=42 ==> gives same result!!
 
 Testing LiteLLM + Qwen + OpenRouter...
 Model 1 returned:
