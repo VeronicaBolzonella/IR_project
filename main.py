@@ -19,6 +19,47 @@ def create_augmented_prompt(prompt, docs):
     docs_prompt = " ".join(doc for doc in docs)
     return prompt + " " + docs_prompt
 
+def compute_regression(final_answers, ensemble_funcs=None):
+    all_sum_of_eigen = []
+    all_semantic_entropy = []
+    all_safe_scores = []
+
+    results = {}
+
+    for _, scores in final_answers.items():
+        all_sum_of_eigen.extend(scores["sum_of_eigen"])
+        all_semantic_entropy.extend(scores["p_true"])
+        all_safe_scores.extend(scores["safe_scores"])
+
+    # Convert to numpy arrays
+    ue1 = np.array(all_sum_of_eigen)
+    ue2 = np.array(all_semantic_entropy)
+    safe = np.array(all_safe_scores)
+
+    # Linear regression using np.polyfit
+    slope1, intercept1 = np.polyfit(ue1, safe, 1)
+    slope2, intercept2 = np.polyfit(ue2, safe, 1)
+
+    coef1 = np.corrcoef(ue1, safe)[0,1]  
+    coef2 = np.corrcoef(ue2, safe)[0,1] 
+
+    results["sum_of_eigen"] = {"slope": slope1, "intercept": intercept1, "correlation": coef1}
+    results["p_true"] = {"slope": slope2, "intercept": intercept2, "correlation": coef2}
+    
+    if ensemble_funcs is not None:
+        for f in ensemble_funcs:
+            ue_ensemble = f(ue1, ue2)
+            print(ue_ensemble[:2])
+            slope, intercept = np.polyfit(ue2, safe, 1)
+            coef = np.corrcoef(ue_ensemble, safe)[0,1] 
+
+
+            name = getattr(f, "__name__", str(f))
+            results[name] = {"slope": slope, "intercept": intercept, "correlation": coef}
+
+    return results
+
+
 def main():
     """
         Instantiates the model, creates the queries dictionary and ranks the documents 
@@ -68,10 +109,6 @@ def main():
         
         final_answers[qid] = {}
         
-        # final_answers[qid]["sum_of_eigen"] = []
-        # final_answers[qid]["semantic_entropy"] = []
-        # final_answers[qid]["safe_scores"] = []
-        
         # Create prompt combining a query and the retrieved documents
         prompt = create_augmented_prompt(q, retreived_docs[qid])
         
@@ -81,7 +118,7 @@ def main():
         print(ue)
         
         final_answers[qid]["sum_of_eigen"] = ue['normalized_truth_values'][0] # should save a whole list of values
-        final_answers[qid]["semantic_entropy"] = ue['normalized_truth_values'][1]
+        final_answers[qid]["p_true"] = ue['normalized_truth_values'][1]
         
         # Gets claims for the generated text 
         claims = ue['claims']
@@ -95,19 +132,30 @@ def main():
         
     log(f"Scores ready")
 
-    # SAVE VALUES SOMEWHERE TO AVOID DISASTERS
+    # SAVE VALUES 
+    with open("scores_results.json", "w") as f:
+        json.dump(final_answers, f, indent=2)
 
-    # todo when 
-    # safe_scores_numeric = prepare safe if needed
-    # X = np.column_stack([sum_of_eigen, semantic_entropy])
-    # y = np.array(safe_scores_numeric)
+    regs = compute_regression(final_answers=final_answers, ensemble_funcs=[sum, min, max, avg, havg])
+    print(regs)
 
-    # # Fit linear regression
-    # reg = LinearRegression()
-    # reg.fit(X, y)
+    with open("regression_results.json", "w") as f:
+        json.dump(regs, f, indent=2)
 
-    # print("Coefficients (sum_of_eigen, semantic_entropy):", reg.coef_)
-    # print("Intercept:", reg.intercept_)
+    def sum(a, b):
+        return a+b
+    
+    def min(a, b):
+        return np.minimum(a, b)
+    
+    def max(a, b):
+        return np.maximum(a, b)
+    
+    def avg(a, b):
+        return (a+b)/2
+    
+    def havg(a, b):
+        return 2/((1/a)+(1/b))
 
 
 if __name__ == '__main__':
