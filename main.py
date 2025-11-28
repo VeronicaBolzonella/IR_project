@@ -4,6 +4,7 @@ from itertools import islice
 import numpy as np
 import sys
 import TruthTorchLM as ttlm
+import os
 
 from pyserini.search.lucene import LuceneSearcher
 
@@ -31,7 +32,7 @@ def main():
     seed = 42
 
     log("Loading reranker model…")
-    model = Reranker()
+    reranker = Reranker()
 
     log(f"Loading queries from {args.queries}…")
     queries = {}
@@ -42,17 +43,27 @@ def main():
             queries[id] = query["prompt"]
 
     log("Ranking documents for queries…")
-    retreived_docs = model.rank(args.index, queries,fast=True)
+    retreived_docs = reranker.rank(args.index, queries,fast=True)
     log(f"Ranking complete, computing UEs...")
     
+    # Define model API
+    
+    
+    os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
+    model ="qwen/qwen2.5-7b-instruct"
+    
+    
     # Define safe - based on Luca's edited code
-    safe = ClaimEvaluator(rater=..., )
+    #safe = ClaimEvaluator(rater=..., )
     
     # Make a dictionary like{ q1: {sum_of_eigen : [values], semantic_entropy : [values], safe_score: [values]}, q2 :... }
     
     final_answers = {}
     
     for qid, q in queries.items():
+        if qid > 0:
+            break # for testing only one query
+        
         final_answers[qid] = {}
         
         # final_answers[qid]["sum_of_eigen"] = []
@@ -63,7 +74,9 @@ def main():
         prompt = create_augmented_prompt(q, retreived_docs[qid])
         
         # Generate text with qwen and compute UEs for claims
-        ue = generate_with_ue(prompt, model=None, api=True, seed=seed)  # model will be just a string!
+        ue = generate_with_ue(prompt, model=model, seed=seed)  # model will be just a string!
+        
+        print(ue)
         
         final_answers[qid]["sum_of_eigen"] = ue['normalized_truth_values'][0] # should save a whole list of values
         final_answers[qid]["semantic_entropy"] = ue['normalized_truth_values'][1]
@@ -72,7 +85,7 @@ def main():
         claims = ue['claims']
         
         # Runs safe model on each claim 
-        safe_results = [safe(atomic_fact=claim) for claim in claims]
+        #safe_results = [safe(atomic_fact=claim) for claim in claims]
         # Converts safe output into numeric values
         safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
         final_answers[qid]["safe_scores"] = safe_results_numeric

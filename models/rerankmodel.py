@@ -64,7 +64,7 @@ class Reranker():
             top_i = torch.topk(logits, k=3).indices.tolist()
             top_docs = [docids[i] for i in top_i]
             top_scores = [logits[i].item() for i in top_i]
-            print(f"Top 3 docs and scores: \n{top_docs} \n{top_scores}")
+            #print(f"Top 3 docs and scores: \n{top_docs} \n{top_scores}")
             docs = [self._extract_text(searcher,d) for d in top_docs]  # raw text
             results[qid] = list(docs)
 
