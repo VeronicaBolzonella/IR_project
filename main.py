@@ -91,7 +91,7 @@ def main():
     
     
     os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
-    model ="openrouter/qwen/qwen2.5-7b-instruct"
+    model ="openrouter/qwen/qwen-2.5-7b-instruct"
     
     
     # Define safe - based on Luca's edited code
