@@ -68,9 +68,9 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
     decomp_method= ttlm.decomposiition_methods.StrucuredDecompositionAPI(model=model, decomposition_depth=1)
     
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty()
-    semantic_entropy = ttlm.truth_methods.SemanticEntropy()
+    p_true = ttlm.truth_methods.PTrue()
     
-    truth_methods = [sum_of_eigen, semantic_entropy]
+    truth_methods = [sum_of_eigen, p_true]
 
     messages = [
                 {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
