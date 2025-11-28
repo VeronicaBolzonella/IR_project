@@ -26,7 +26,6 @@ class Reranker():
                 docs = [self._extract_text(searcher,d) for d in docids]  # raw text
                 results[qid] = list(docs)
             
-            print("Fast ranking results: ", results)
             return results
     
 
@@ -56,12 +55,10 @@ class Reranker():
                     return_tensors='pt'
                     ).to(self.device)
             
-                # inference_mode doesn't compute gradients and renders it impossible to re-enable them 
                 with torch.inference_mode():
                     batch_logits = self.encoder(**features).logits.squeeze(-1)
                     all_logits.append(batch_logits.detach().cpu())
                     
-                #print("Shape of the logits: ", logits.shape)
 
             logits = torch.cat(all_logits)
             top_i = torch.topk(logits, k=3).indices.tolist()

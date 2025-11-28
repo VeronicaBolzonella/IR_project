@@ -4,7 +4,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from models.qwen import Qwen
 
-def generate_with_ue(prompt, model=None, api=False):
+def generate_with_ue(prompt, model=None, api=False, seed=42):
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
     if model is None:
         model = AutoModelForCausalLM.from_pretrained(
@@ -28,7 +28,8 @@ def generate_with_ue(prompt, model=None, api=False):
         output = ttlm.generate_with_truth_value(
             model=model,
             messages=messages,
-            truth_methods=truth_methods
+            truth_methods=truth_methods,
+            generation_seed=seed
         )
     else:
         output = ttlm.generate_with_truth_value(
@@ -37,7 +38,7 @@ def generate_with_ue(prompt, model=None, api=False):
             messages=messages,
             truth_methods=truth_methods,
             max_new_tokens=100,
-            temperature=0.7,   
+            generation_seed=seed
         )
     return output
 
