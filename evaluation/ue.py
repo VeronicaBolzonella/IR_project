@@ -64,6 +64,9 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
     
     '''
     
+    # Decomposition method splits the generated text into claims
+    decomp_method= ttlm.decomposiition_methods.StrucuredDecompositionAPI(model=model, decomposition_depth=1)
+    
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty()
     semantic_entropy = ttlm.truth_methods.SemanticEntropy()
     
@@ -78,7 +81,7 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
     output = ttlm.long_form_generation_with_truth_value(
         model=model,
         messages=messages,
-        decomp_method=None,  ## TO DO
+        decomp_method=decomp_method,
         claim_check_methods=truth_methods, # maybe the truth methods need to be wrapped somehow
         generation_seed=seed,  ## here can also add context if we want to add documents here instead of in the prompt
     )
