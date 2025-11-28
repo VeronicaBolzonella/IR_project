@@ -50,7 +50,7 @@ def main():
     
     
     os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
-    model ="qwen/qwen2.5-7b-instruct"
+    model ="openrouter/qwen/qwen2.5-7b-instruct"
     
     
     # Define safe - based on Luca's edited code
@@ -60,9 +60,11 @@ def main():
     
     final_answers = {}
     
+    count = 0
     for qid, q in queries.items():
-        if qid > 0:
+        if count > 0:
             break # for testing only one query
+        count +=1
         
         final_answers[qid] = {}
         
@@ -86,9 +88,10 @@ def main():
         
         # Runs safe model on each claim 
         #safe_results = [safe(atomic_fact=claim) for claim in claims]
+        
         # Converts safe output into numeric values
-        safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
-        final_answers[qid]["safe_scores"] = safe_results_numeric
+        #safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
+        #final_answers[qid]["safe_scores"] = safe_results_numeric
         
     log(f"Scores ready")
 

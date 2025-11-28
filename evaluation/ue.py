@@ -1,5 +1,6 @@
 import TruthTorchLM as ttlm
-
+from TruthTorchLM.long_form_generation import StructuredDecompositionAPI
+from TruthTorchLM.long_form_generation.generation import long_form_generation_with_truth_value
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from models.qwen import Qwen
@@ -65,7 +66,7 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
     '''
     
     # Decomposition method splits the generated text into claims
-    decomp_method= ttlm.decomposiition_methods.StrucuredDecompositionAPI(model=model, decomposition_depth=1)
+    decomp_method= StructuredDecompositionAPI(model=model, decomposition_depth=1)
     
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty()
     p_true = ttlm.truth_methods.PTrue()
@@ -78,7 +79,7 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
             ]
 
     
-    output = ttlm.long_form_generation_with_truth_value(
+    output = long_form_generation_with_truth_value(
         model=model,
         messages=messages,
         decomp_method=decomp_method,
