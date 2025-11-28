@@ -90,22 +90,35 @@ def main():
         # TESTING WITH ONLY 5 QUERIES
         # ------------------------------------------
 
-        for qid, q in list(queries.items())[:2]:
+        # WRONG: SHOULD PASS FACTS TO SAFE, NOT QUERIES
+        # for qid, q in list(queries.items())[:2]:
 
-            print(f"Evaluating query {qid}: {q}", flush=True)
+        #     print(f"Evaluating query {qid}: {q}", flush=True)
 
-            # Possible Infinite Time loop here -> does safe(q) even do anything?
-            result = safe(q)
+        #     # Possible Infinite Time loop here -> does safe(q) even do anything?
+        #     result = safe(q)
 
+        #     safe_outputs = {
+        #         "id": qid,
+        #         "prompt": q,
+        #         "safe_answer": result["answer"],
+        #         "safe_response": result["response"],
+        #         "safe_search_details": result["search_details"]
+        #     }
+        #     f.write(json.dumps(safe_outputs) + "\n")
+        
+        claims = ["Paris is the capital of France", "Marseille is the capital of France"]
+        for claim in claims:
+            result = safe(claim)
+            
             safe_outputs = {
-                "id": qid,
-                "prompt": q,
+                "claim": claim,
                 "safe_answer": result["answer"],
                 "safe_response": result["response"],
                 "safe_search_details": result["search_details"]
             }
-
             f.write(json.dumps(safe_outputs) + "\n")
+
 
 if __name__ == "__main__":
     main()
