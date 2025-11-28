@@ -3,6 +3,7 @@ import argparse
 from itertools import islice
 import numpy as np
 import sys
+import TruthTorchLM as ttlm
 
 from pyserini.search.lucene import LuceneSearcher
 
@@ -47,31 +48,34 @@ def main():
     # Define safe - based on Luca's edited code
     safe = ClaimEvaluator(rater=..., )
     
-    # Maybe make a dictionary like{ q1: [sum of eigen values, semantic entropy, safe_score]}
-    sum_of_eigen = []
-    semantic_entropy = []
-    model_answers = []
-    safe_scores = []
+    # Make a dictionary like{ q1: {sum_of_eigen : [values], semantic_entropy : [values], safe_score: [values]}, q2 :... }
     
+    final_answers = {}
     
     for qid, q in queries.items():
+        final_answers[qid] = {}
+        
+        # final_answers[qid]["sum_of_eigen"] = []
+        # final_answers[qid]["semantic_entropy"] = []
+        # final_answers[qid]["safe_scores"] = []
+        
+        # Create prompt combining a query and the retrieved documents
         prompt = create_augmented_prompt(q, retreived_docs[qid])
         
         # Generate text with qwen and compute UEs for claims
         ue = generate_with_ue(prompt, model=None, api=True, seed=seed)  # model will be just a string!
         
-        sum_of_eigen.append(ue['normalized_truth_values'][0])
-        semantic_entropy.append(ue['normalized_truth_values'][1])
+        final_answers[qid]["sum_of_eigen"] = ue['normalized_truth_values'][0] # should save a whole list of values
+        final_answers[qid]["semantic_entropy"] = ue['normalized_truth_values'][1]
         
-        # Gets claims for a generated text th
+        # Gets claims for the generated text 
         claims = ue['claims']
         
         # Runs safe model on each claim 
         safe_results = [safe(atomic_fact=claim) for claim in claims]
-        
         # Converts safe output into numeric values
         safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
-        
+        final_answers[qid]["safe_scores"] = safe_results_numeric
         
     log(f"Scores ready")
 
