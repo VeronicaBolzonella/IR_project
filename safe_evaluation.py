@@ -60,9 +60,9 @@ def main():
     with output_path.open("w", encoding="utf-8") as f:
         
         # Testing safe on some claims
-        claims = ["Paris is the capital of France", "Marseille is the capital of France"]
-
-        for claim in claims:
+        # claims = ["Paris is the capital of France", "Marseille is the capital of France"]
+        claims2 = ["Picasso painted Mona Lisa"]
+        for claim in claims2:
             # Calling safe on the claim
             result = safe(claim)
 
