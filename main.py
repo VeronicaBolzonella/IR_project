@@ -44,17 +44,35 @@ def main():
     retreived_docs = model.rank(args.index, queries,fast=True)
     log(f"Ranking complete, computing UEs...")
     
+    # Define safe - based on Luca's edited code
+    safe = ClaimEvaluator(rater=..., )
+    
+    # Maybe make a dictionary like{ q1: [sum of eigen values, semantic entropy, safe_score]}
     sum_of_eigen = []
     semantic_entropy = []
     model_answers = []
     safe_scores = []
+    
+    
     for qid, q in queries.items():
         prompt = create_augmented_prompt(q, retreived_docs[qid])
-        ue = generate_with_ue(prompt, model=None, api=True, seed=seed)
+        
+        # Generate text with qwen and compute UEs for claims
+        ue = generate_with_ue(prompt, model=None, api=True, seed=seed)  # model will be just a string!
+        
         sum_of_eigen.append(ue['normalized_truth_values'][0])
         semantic_entropy.append(ue['normalized_truth_values'][1])
-        model_answers.append(ue['generated_text'])
-        # somehow get safe from the same answers
+        
+        # Gets claims for a generated text th
+        claims = ue['claims']
+        
+        # Runs safe model on each claim 
+        safe_results = [safe(atomic_fact=claim) for claim in claims]
+        
+        # Converts safe output into numeric values
+        safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
+        
+        
     log(f"Scores ready")
 
     # SAVE VALUES SOMEWHERE TO AVOID DISASTERS
