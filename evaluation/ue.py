@@ -66,7 +66,9 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
     '''
     
     # Decomposition method splits the generated text into claims
-    decomp_method= StructuredDecompositionAPI(model=model, decomposition_depth=1)
+    decomp_method= StructuredDecompositionAPI(model='openrouter/openai/gpt-4o-mini', decomposition_depth=1)
+    
+    print(decomp_method("This is a simple test sentence."))
     
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty(entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu')
     p_true = ttlm.truth_methods.PTrue()
@@ -86,4 +88,5 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
         claim_check_methods=truth_methods, # maybe the truth methods need to be wrapped somehow
         generation_seed=seed,  ## here can also add context if we want to add documents here instead of in the prompt
     )
+    
     return output
