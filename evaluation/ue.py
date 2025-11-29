@@ -1,6 +1,7 @@
 import TruthTorchLM as ttlm
 from TruthTorchLM.long_form_generation import StructuredDecompositionAPI
 from TruthTorchLM.long_form_generation.generation import long_form_generation_with_truth_value
+from TruthTorchLM.long_form_generation.claim_check_methods.question_answer_generation import QuestionAnswerGeneration
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from models.qwen import Qwen
@@ -51,7 +52,7 @@ from models.qwen import Qwen
 # print(ue_values['normalized_truth_values'])
 
 
-def generate_with_ue(prompt, model=None, api=False, seed=42):
+def generate_with_ue(prompt, model=None, seed=42):
     '''
     Output looks like this: 
     
@@ -75,6 +76,8 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
     
     truth_methods = [sum_of_eigen, p_true]
 
+    claim_check_methods = [QuestionAnswerGeneration(model=model, num_questions=2, truth_methods=truth_methods, entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu', seed=seed )]
+    
     messages = [
                 {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
                 {"role": "user", "content": prompt}
@@ -85,7 +88,7 @@ def generate_with_ue(prompt, model=None, api=False, seed=42):
         model=model,
         messages=messages,
         decomp_method=decomp_method,
-        claim_check_methods=truth_methods, # maybe the truth methods need to be wrapped somehow
+        claim_check_methods=claim_check_methods, # maybe the truth methods need to be wrapped somehow
         generation_seed=seed,  ## here can also add context if we want to add documents here instead of in the prompt
     )
     
