@@ -110,7 +110,7 @@ def main():
         final_answers[qid] = {}
         
         # Create prompt combining a query and the retrieved documents
-        prompt = create_augmented_prompt(q, retreived_docs[qid])
+        prompt = create_augmented_prompt(q, retreived_docs[qid][0]) # for testing: using only one relevant document
         
         # Generate text with qwen and compute UEs for claims
         ue = generate_with_ue(prompt, model=model, seed=seed)  # model will be just a string!
