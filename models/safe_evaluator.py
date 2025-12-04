@@ -189,27 +189,27 @@ def call_search(
     # NOTE: num_searches is hard-coded into Reranker
     
     # IMPLEMENTATION:
-    searcher = LuceneSearcher(INDEX_PATH)
+    # searcher = LuceneSearcher(INDEX_PATH)
     reranker = Reranker()
 
     # Making it into a dictionary because our rerank model takes a dictionary
     query_dict = {0: search_query}
 
     # BM25 Implementation
-    if fast:
-        # Result: {0: [doc_id1, doc_id2, ...]}
-        result_bm25 = reranker.rank(INDEX_PATH, query_dict, fast=True)
-        top_doc_ids_bm25 = result_bm25[0]
-        # ---OLD---hits = searcher.search(search_query, k=num_searches)
-        return "\n".join(searcher.doc(docid).raw() for docid in top_doc_ids_bm25)
+    # if fast:
+    #     # Result: {0: [doc_id1, doc_id2, ...]}
+    #     result_bm25 = reranker.rank(INDEX_PATH, query_dict, fast=True)
+    #     top_doc_ids_bm25 = result_bm25[0]
+    #     # ---OLD---hits = searcher.search(search_query, k=num_searches)
+    #     return "\n".join(searcher.doc(docid).raw() for docid in top_doc_ids_bm25)
 
     # INDEX_PATH added as global variable at top of file (wiki dump)
     # Returns: {0: [doc_id1, doc_id2, ...]}
-    result = reranker.rank(INDEX_PATH, query_dict, fast=False)
+    documents = reranker.rank(INDEX_PATH, query_dict, fast=fast)
     
     # Reshape to => [docid1,docid2,docid3]
     # ---OLD--- top_doc_ids = [docid for docid,_ in results[0][:num_searches]] 
-    top_doc_ids = result[0]
+    # top_doc_ids = result[0]
 
     # Get docs and return in as one string
     # GoogleSearchResult expects: 
@@ -217,8 +217,8 @@ def call_search(
     #   result = "doc1 \s ndoc2 \s doc3"
 
     #  ---CORRECT---
-    print("Returning:\n","\n".join(searcher.doc(docid).raw() for docid in top_doc_ids))
-    return " ".join(searcher.doc(docid).raw() for docid in top_doc_ids)
+    #print("Returning:\n","\n".join(searcher.doc(docid).raw() for docid in top_doc_ids))
+    return " ".join(documents[0])
 
 
 
@@ -240,7 +240,7 @@ def maybe_get_next_search(
     full_prompt = full_prompt.replace(_KNOWLEDGE_PLACEHOLDER, knowledge)
     full_prompt = utils.strip_string(full_prompt)
     model_response = _generate(full_prompt, model, tokenizer, **kwargs)
-    print("DEBUG NEXT_SEARCH RESPONSE:\n", model_response, "\n", flush=True)
+    #print("DEBUG NEXT_SEARCH RESPONSE:\n", model_response, "\n", flush=True)
     query = utils.extract_first_code_block(
         model_response, ignore_language=True)
     # print(f'Search query: {query}')
@@ -273,7 +273,7 @@ def maybe_get_final_answer(
     full_prompt = full_prompt.replace(_KNOWLEDGE_PLACEHOLDER, knowledge)
     full_prompt = utils.strip_string(full_prompt)
     model_response = _generate(full_prompt, model, tokenizer, **kwargs)
-    print("DEBUG FINAL_ANSWER RESPONSE:\n", model_response, "\n", flush=True)
+    #print("DEBUG FINAL_ANSWER RESPONSE:\n", model_response, "\n", flush=True)
     answer = utils.extract_first_square_brackets(model_response)
     answer = re.sub(r"[^\w\s]", "", answer).strip()
     

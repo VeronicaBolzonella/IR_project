@@ -4,7 +4,6 @@ from TruthTorchLM.long_form_generation.generation import long_form_generation_wi
 from TruthTorchLM.long_form_generation.claim_check_methods.question_answer_generation import QuestionAnswerGeneration
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from models.qwen import Qwen
 
 # def generate_with_ue(prompt, model=None, api=False, seed=42):
 #     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
