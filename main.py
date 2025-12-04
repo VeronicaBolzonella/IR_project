@@ -20,20 +20,20 @@ def create_augmented_prompt(prompt, docs):
     return prompt + " " + docs_prompt
 
 def compute_regression(final_answers, ensemble_funcs=None):
-    all_sum_of_eigen = []
-    all_semantic_entropy = []
+    all_ue1 = []
+    all_ue2 = []
     all_safe_scores = []
 
     results = {}
 
     for _, scores in final_answers.items():
-        all_sum_of_eigen.extend(scores["sum_of_eigen"])
-        all_semantic_entropy.extend(scores["p_true"])
+        all_ue1.extend(scores["ue1"]) # sum of eigen
+        all_ue2.extend(scores["ue2"]) 
         all_safe_scores.extend(scores["safe_scores"])
 
     # Convert to numpy arrays
-    ue1 = np.array(all_sum_of_eigen)
-    ue2 = np.array(all_semantic_entropy)
+    ue1 = np.array(all_ue1)
+    ue2 = np.array(all_ue2)
     safe = np.array(all_safe_scores)
 
     # Linear regression using np.polyfit
@@ -43,8 +43,8 @@ def compute_regression(final_answers, ensemble_funcs=None):
     coef1 = np.corrcoef(ue1, safe)[0,1]  
     coef2 = np.corrcoef(ue2, safe)[0,1] 
 
-    results["sum_of_eigen"] = {"slope": slope1, "intercept": intercept1, "correlation": coef1}
-    results["p_true"] = {"slope": slope2, "intercept": intercept2, "correlation": coef2}
+    results["ue1"] = {"slope": slope1, "intercept": intercept1, "correlation": coef1}
+    results["p_true2ue"] = {"slope": slope2, "intercept": intercept2, "correlation": coef2}
     
     if ensemble_funcs is not None:
         for f in ensemble_funcs:
