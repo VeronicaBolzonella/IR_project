@@ -7,21 +7,46 @@ import torch
 from pyserini.search.lucene import LuceneSearcher
 
 class Reranker():
+    """
+    Reranker model, retrieves the top 3 hits for a query using BM25 first and reranking with a Cross Encoder
+    """
     def __init__(self):
         self.encoder = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
         self.tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.encoder.to(self.device).eval()
 
-    def rank(self, index, queries, fast=True):
-        # If fast = True, only do the BM25 without the cross-encoder
+    def rank(self, 
+             index:str, 
+             queries:str, 
+             top_hits:int = 3, 
+             top_bm25_hits:int = 1000, 
+             fast=False, 
+             batch_size:int = 32
+            ):
+        """
+        Ranks the documents and returns the content of the top 3 hits.
+
+        Args:
+            index (str): path to the index folder.
+            queries (str): path to the queries folder.
+            top_hits (int): number of top documents to return. Defaults to 3.
+            top_bm25_hits (int): number of top documents returned in the BM25 pass. Defaults to 1000.
+            fast (bool, optional): if true the retriever only uses BM25 and does not rerank with the Cross
+                encoder. Defaults to False.
+            batch_size (int): Number of docs in a batch of the cross encoder pass. Defaults to 32.
+
+        Returns:
+            results (List(str)): list of the content of the top_hits documents
+        """
         searcher = LuceneSearcher(index)
         
         results = {}
         
         if fast:
+            # only BM25 pass
             for qid, q in queries.items():
-                hits = searcher.search(q, k=3)
+                hits = searcher.search(q, k=top_hits)
                 docids = [h.docid for h in hits]
                 docs = [self._extract_text(searcher,d) for d in docids]  # raw text
                 results[qid] = list(docs)
@@ -33,19 +58,17 @@ class Reranker():
             print("Query text: ", q)
             
             # First Pass BM25 (Lucene)
-            hits = searcher.search(q, k=1000)
+            hits = searcher.search(q, k=top_bm25_hits)
             
             # Scores per query and document id
             docids = [h.docid for h in hits]
             docs = [self._extract_text(searcher,d) for d in docids]
 
-            # Batches 
-            batch_size = 32
             all_logits = []
             
             for i in range(0, len(docs), batch_size):
+                # cross encoder pass
                 batch_docs = docs[i:i + batch_size]
-                
                 features = self.tokenizer(
                     [q]* len(batch_docs), 
                     batch_docs, 
@@ -62,9 +85,7 @@ class Reranker():
             logits = torch.cat(all_logits)
             top_i = torch.topk(logits, k=3).indices.tolist()
             top_docs = [docids[i] for i in top_i]
-            top_scores = [logits[i].item() for i in top_i]
             
-            #print(f"Top 3 docs and scores: \n{top_docs} \n{top_scores}")
             docs = [self._extract_text(searcher,d) for d in top_docs]  # raw text
             results[qid] = list(docs)
 
@@ -72,58 +93,9 @@ class Reranker():
 
                     
     def _extract_text(self, searcher, docid):
+        # Returns document content for given document id
         doc = searcher.doc(docid)
         if doc is None:
             return ""
         # Raw because of setting in indexing.sh
         return doc.raw()
-
-
-
-model = Reranker()
-
-queries = {}
-
-with open('data/longfact-objects_celebrities.jsonl', 'r', encoding='utf-8') as f:
-    id = 0
-    for line in f:
-        query = json.loads(line)
-        id += 1
-        queries[id] = query["prompt"]
-
-model.rank("indexes/wiki_dump_index", queries)
-
-
-
-# # Lucene Searcher
-
-# searcher = LuceneSearcher('indexes/wiki_dump_index')
-
-# hits = searcher.search
-# for qid, q in queries.items():
-        
-#         # First Pass BM25 (Lucene)
-#         hits = searcher.search(q, k=1000)
-        
-#         # Scores per query and document id
-#         for i in range(len(hits)):
-#             res = [qid, hits[i].docid, hits[i].score]
-        
-#         #print(res)
-        
-# # Cross Encoder
-
-# model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
-# tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
-# model.eval()
-
-# results = {}
-
-# for qid, q in queries.items():
-#     features = tokenizer(q, padding=True, truncation=True, return_tensors='pt')
-#     with torch.no_grad():
-#         score = model(**features).logits
-#     results[qid] = score
-
-# for qid, score in results.items():
-#     print(f"Query {qid}: score={score}")
