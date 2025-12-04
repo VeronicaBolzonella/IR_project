@@ -56,25 +56,35 @@ def generate_with_ue(prompt, model=None, seed=42):
     '''
     Output looks like this: 
     
+    For claim check version:
     truth_dict = {
         "generated_text": generated_text,
         "claims": claims,
         "normalized_truth_values": normalized_truth_values,
         "unnormalized_truth_values": unnormalized_truth_values,
         "claim_check_method_details": method_spec_outputs,
+        ...
     }
+    
+    For non-claim check version:
+    truth_dict = {
+        "generated_text": generated_text,
+        "normalized_truth_values": normalized_truth_values,
+        "unnormalized_truth_values": unnormalized_truth_values,
+    }
+    
     
     '''
     
     # Decomposition method splits the generated text into claims
     decomp_method= StructuredDecompositionAPI(model='openrouter/openai/gpt-4o-mini', decomposition_depth=1)
     
-    print(decomp_method("This is a simple test sentence."))
+    # print(decomp_method("This is a simple test sentence."))
     
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty(entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu')
-    p_true = ttlm.truth_methods.PTrue()
+    #p_true = ttlm.truth_methods.PTrue()
     
-    truth_methods = [sum_of_eigen, p_true]
+    truth_methods = [sum_of_eigen]
 
     claim_check_methods = [QuestionAnswerGeneration(model=model, num_questions=2, truth_methods=truth_methods, entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu', seed=seed )]
     
@@ -91,5 +101,12 @@ def generate_with_ue(prompt, model=None, seed=42):
         claim_check_methods=claim_check_methods, # maybe the truth methods need to be wrapped somehow
         generation_seed=seed,  ## here can also add context if we want to add documents here instead of in the prompt
     )
+    
+    # output = ttlm.generate_with_truth_value(
+    #     model=model,
+    #     messages=messages,
+    #     truth_methods=truth_methods,
+    #     generation_seed=seed
+    # )
     
     return output
