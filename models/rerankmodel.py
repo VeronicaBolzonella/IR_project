@@ -1,5 +1,6 @@
 # Get the queries
 import json
+from typing import List
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
@@ -23,7 +24,7 @@ class Reranker():
              top_bm25_hits:int = 1000, 
              fast=False, 
              batch_size:int = 32
-            ):
+            )-> List[str]:
         """
         Ranks the documents and returns the content of the top 3 hits.
 
@@ -32,8 +33,8 @@ class Reranker():
             queries (str): path to the queries folder.
             top_hits (int): number of top documents to return. Defaults to 3.
             top_bm25_hits (int): number of top documents returned in the BM25 pass. Defaults to 1000.
-            fast (bool, optional): if true the retriever only uses BM25 and does not rerank with the Cross
-                encoder. Defaults to False.
+            fast (bool, optional): if true the retriever only uses BM25 and does not rerank with the Cross encoder. 
+            Defaults to False.
             batch_size (int): Number of docs in a batch of the cross encoder pass. Defaults to 32.
 
         Returns:
