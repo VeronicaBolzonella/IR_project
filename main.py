@@ -117,8 +117,8 @@ def main():
         
         print(ue)
         
-        final_answers[qid]["sum_of_eigen"] = ue['normalized_truth_values'][0] # should save a whole list of values
-        final_answers[qid]["p_true"] = ue['normalized_truth_values'][1]
+        final_answers[qid]["sum_of_eigen"] = ue['normalized_truth_values'][0][0] # should save a whole list of values, NOT if its just for one text
+        #final_answers[qid]["p_true"] = ue['normalized_truth_values'][0][1]
         
         # Gets claims for the generated text 
         claims = ue['claims']
