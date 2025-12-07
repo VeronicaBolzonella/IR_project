@@ -61,22 +61,17 @@ def compute_roc_analysis(final_answers, ensemble_funcs=None):
 
     results = {}
 
-    # 1. Gather all scores from the input dictionary
     for _, scores in final_answers.items():
-        # UEs are the predicted scores (higher UE = higher predicted 'unsafe' probability)
         all_ue1.extend(scores["ue1"]) 
         all_ue2.extend(scores["ue2"]) 
         
         all_safe_scores.extend(scores["safe_scores"])
 
-    # Convert to numpy arrays
     ue1 = np.array(all_ue1)
     ue2 = np.array(all_ue2)
-    safe_labels = np.array(all_safe_scores) # The 'True' binary labels
-
-    # Invert so now 0 is correct and 1 is incorrect
+    safe_labels = np.array(all_safe_scores) 
+    # 0 is correct and 1 is incorrect to match uncertainty
     safe_labels = 1 - safe_labels
-    # --- 2. Process Individual UEs ---
 
     # UE1 Analysis
     fpr1, tpr1, thresholds1 = roc_curve(safe_labels, ue1)
@@ -84,22 +79,15 @@ def compute_roc_analysis(final_answers, ensemble_funcs=None):
     results["ue1"] = {"roc_auc": float(auc1), "fpr": fpr1.tolist(), "tpr": tpr1.tolist(), "thresholds": thresholds1.tolist()}
     
     # UE2 Analysis
-    # Renaming 'p_true2ue' to 'ue2' for consistency in the code logic
     fpr2, tpr2, thresholds2 = roc_curve(safe_labels, ue2)
     auc2 = roc_auc_score(safe_labels, ue2)
     results["ue2"] = {"roc_auc": float(auc2), "fpr": fpr2.tolist(), "tpr": tpr2.tolist(), "thresholds": thresholds2.tolist()}
 
-    # --- 3. Process Ensembles ---
     if ensemble_funcs is not None:
         for f in ensemble_funcs:
-            # Calculate the ensemble score
             ue_ensemble = f(ue1, ue2)
-            
-            # Compute ROC
             fpr_e, tpr_e, thresholds_e = roc_curve(safe_labels, ue_ensemble)
             auc_e = roc_auc_score(safe_labels, ue_ensemble)
-
-            # Store results
             name = getattr(f, "__name__", str(f))
             results[name] = {"roc_auc": float(auc_e), "fpr": fpr_e.tolist(), "tpr": tpr_e.tolist(), "thresholds": thresholds_e.tolist()}
     
@@ -134,21 +122,14 @@ def main():
     log(f"Ranking complete, computing UEs...")
     
     # Define model API
-    
-    
     os.environ["OPENROUTER_API_BASE"] = "https://openrouter.ai/api/v1"
     model ="openrouter/qwen/qwen-2.5-7b-instruct"
-    
-    
-    # Define safe - based on Luca's edited code
     
     safe = ClaimEvaluator(rater=model, fast=True)
     
     if args.index is not None:
         safe_evaluator.INDEX_PATH = args.index
-    
-    # Make a dictionary like{ q1: {sum_of_eigen : [values], semantic_entropy : [values], safe_score: [values]}, q2 :... }
-    
+        
     final_answers = {}
     
     count = 0
@@ -163,19 +144,15 @@ def main():
         prompt = create_augmented_prompt(q, retreived_docs[qid][0]) # for testing: using only one relevant document
         
         # Generate text with qwen and compute UEs for claims
-        ue = generate_with_ue(prompt, model=model, seed=seed)  # model will be just a string!
+        ue = generate_with_ue(prompt, model=model, seed=seed)  # model as str
         
         
-        final_answers[qid]["ue1"] = [float(item[0]) for item in ue['normalized_truth_values'][0]]  # should save a whole list of values, NOT if its just for one text
-        
-        # should save a whole list of values, NOT if its just for one text
+        final_answers[qid]["ue1"] = [float(item[0]) for item in ue['normalized_truth_values'][0]]  
         final_answers[qid]["ue2"] = [float(item[1]) for item in ue['normalized_truth_values'][0]] 
         
-        print("UE values computed:", final_answers[qid]["ue1"])
+        # print("UE values computed:", final_answers[qid]["ue1"])
         
-        # Gets claims for the generated text 
         claims = ue['claims']
-        
         # Runs safe model on each claim 
         safe_results = [safe(atomic_fact=claim) for claim in claims]
         
