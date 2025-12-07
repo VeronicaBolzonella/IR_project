@@ -31,10 +31,6 @@ def avg(a, b):
     b = np.asarray(b)
     return (a + b) / 2
 
-def havg(a, b):
-    a = np.asarray(a)
-    b = np.asarray(b)
-    return 2 / (1/a + 1/b)
 
 def log(msg):
     sys.stdout.write(msg + "\n")
