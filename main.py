@@ -12,6 +12,7 @@ from models.rerankmodel import Reranker
 from evaluation.ue import generate_with_ue
 from models.safe_evaluator import ClaimEvaluator
 import models.safe_evaluator as safe_evaluator
+from sklearn.metrics import roc_curve, roc_auc_score
 
 def sum(a, b):
     a = np.asarray(a)
@@ -43,43 +44,69 @@ def create_augmented_prompt(prompt, docs):
     docs_prompt = " ".join(docs)
     return prompt + " " + docs_prompt
 
-def compute_regression(final_answers, ensemble_funcs=None):
+def compute_roc_analysis(final_answers, ensemble_funcs=None):
+    """
+    Computes ROC-AUC score for individual Uncertainty Estimates (UEs) 
+    and their ensembles against binary safety scores.
+
+    Args:
+        final_answers (dict): A dictionary where values are dicts containing 
+                              "ue1", "ue2", and "safe_scores" lists.
+        ensemble_funcs (list, optional): A list of functions for combining ue1 and ue2.
+                                        Defaults to None.
+
+    Returns:
+        dict: A dictionary of results containing 'roc_auc' for each method, 
+              and the corresponding 'fpr', 'tpr', and 'thresholds'.
+    """
     all_ue1 = []
     all_ue2 = []
     all_safe_scores = []
 
     results = {}
 
+    # 1. Gather all scores from the input dictionary
     for _, scores in final_answers.items():
-        all_ue1.append(scores["ue1"]) # sum of eigen
-        all_ue2.append(scores["ue2"]) 
-        all_safe_scores.append(scores["safe_scores"])
+        # UEs are the predicted scores (higher UE = higher predicted 'unsafe' probability)
+        all_ue1.extend(scores["ue1"]) 
+        all_ue2.extend(scores["ue2"]) 
+        
+        all_safe_scores.extend(scores["safe_scores"])
 
     # Convert to numpy arrays
     ue1 = np.array(all_ue1)
     ue2 = np.array(all_ue2)
-    safe = np.array(all_safe_scores)
+    safe_labels = np.array(all_safe_scores) # The 'True' binary labels
 
-    # Linear regression using np.polyfit
-    slope1, intercept1 = np.polyfit(ue1, safe, 1)
-    slope2, intercept2 = np.polyfit(ue2, safe, 1)
+    # Invert so now 0 is correct and 1 is incorrect
+    safe_labels = 1 - safe_labels
+    # --- 2. Process Individual UEs ---
 
-    coef1 = np.corrcoef(ue1, safe)[0,1]  
-    coef2 = np.corrcoef(ue2, safe)[0,1] 
-
-    results["ue1"] = {"slope": slope1, "intercept": intercept1, "correlation": coef1}
-    results["ue2"] = {"slope": slope2, "intercept": intercept2, "correlation": coef2}
+    # UE1 Analysis
+    fpr1, tpr1, thresholds1 = roc_curve(safe_labels, ue1)
+    auc1 = roc_auc_score(safe_labels, ue1)
+    results["ue1"] = {"roc_auc": float(auc1), "fpr": fpr1.tolist(), "tpr": tpr1.tolist(), "thresholds": thresholds1.tolist()}
     
+    # UE2 Analysis
+    # Renaming 'p_true2ue' to 'ue2' for consistency in the code logic
+    fpr2, tpr2, thresholds2 = roc_curve(safe_labels, ue2)
+    auc2 = roc_auc_score(safe_labels, ue2)
+    results["ue2"] = {"roc_auc": float(auc2), "fpr": fpr2.tolist(), "tpr": tpr2.tolist(), "thresholds": thresholds2.tolist()}
+
+    # --- 3. Process Ensembles ---
     if ensemble_funcs is not None:
         for f in ensemble_funcs:
+            # Calculate the ensemble score
             ue_ensemble = f(ue1, ue2)
-            slope, intercept = np.polyfit(ue_ensemble, safe, 1)
-            coef = np.corrcoef(ue_ensemble, safe)[0,1] 
+            
+            # Compute ROC
+            fpr_e, tpr_e, thresholds_e = roc_curve(safe_labels, ue_ensemble)
+            auc_e = roc_auc_score(safe_labels, ue_ensemble)
 
-
-            name = getattr(f, "__name__", str(f))
-            results[name] = {"slope": slope, "intercept": intercept, "correlation": coef}
-
+            # Store results
+            name = getattr(f, "_name_", str(f))
+            results[name] = {"roc_auc": float(auc_e), "fpr": fpr_e.tolist(), "tpr": tpr_e.tolist(), "thresholds": thresholds_e.tolist()}
+    
     return results
 
 
@@ -130,7 +157,7 @@ def main():
     
     count = 0
     for qid, q in queries.items():
-        if count > 1:
+        if count > 0:
             break # for testing only one query
         count +=1
         
@@ -146,7 +173,7 @@ def main():
         final_answers[qid]["ue1"] = [float(item[0]) for item in ue['normalized_truth_values'][0]]  # should save a whole list of values, NOT if its just for one text
         
         # should save a whole list of values, NOT if its just for one text
-        #final_answers[qid]["ue2"] = [float(item[1]) for item in ue['normalized_truth_values'][0]] 
+        final_answers[qid]["ue2"] = [float(item[1]) for item in ue['normalized_truth_values'][0]] 
         
         print("UE values computed:", final_answers[qid]["ue1"])
         
@@ -162,27 +189,16 @@ def main():
         
     log(f"Scores ready")
 
-    for q, data in final_answers.items():
-        # compute average for each 'ue' key
-        for key in list(data.keys()):
-            if key.startswith("ue"):
-                data[key] = float(np.sum(data[key]) / len(data[key]))
-    
-        # compute percentage correct for safe_scores
-        safe = data.get("safe_scores", [])
-        # save precision
-        data["safe_scores"] = np.sum(safe) / len(safe)
-
-    # SAVE VALUES 
     with open("scores_results.json", "w") as f:
         json.dump(final_answers, f, indent=2)
 
-    regs = compute_regression(final_answers=final_answers, ensemble_funcs=[sum, min, max, avg, havg])
-    print(regs)
+    rocs = compute_roc_analysis(final_answers=final_answers, ensemble_funcs=[sum, min, max, avg, havg])
+    print(rocs)
 
-    with open("regression_results.json", "w") as f:
-        json.dump(regs, f, indent=2)
-
+    with open("roc_results.json", "w") as f:
+        json.dump(rocs, f, indent=2)
+    
+    
 
 if __name__ == '__main__':
     main()

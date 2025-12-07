@@ -81,9 +81,9 @@ def generate_with_ue(prompt, model=None, seed=42):
     # print(decomp_method("This is a simple test sentence."))
     
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty(entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu')
-    #p_true = ttlm.truth_methods.PTrue()
+    p_true = ttlm.truth_methods.EccentricityConfidence(entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu')
     
-    truth_methods = [sum_of_eigen]
+    truth_methods = [sum_of_eigen, p_true]
 
     claim_check_methods = [QuestionAnswerGeneration(model=model, num_questions=2, truth_methods=truth_methods, entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu', seed=seed )]
     
