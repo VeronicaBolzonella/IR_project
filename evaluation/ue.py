@@ -36,7 +36,7 @@ def generate_with_ue(prompt:str, model:str, seed=42)->dict:
     sum_of_eigen = ttlm.truth_methods.SumEigenUncertainty(
         entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu'
         )
-    ecc = ttlm.truth_methods.EccentricityConfidence()
+    ecc = ttlm.truth_methods.EccentricityConfidence(entailment_model_device='cuda' if torch.cuda.is_available() else 'cpu')
     
     truth_methods = [sum_of_eigen, ecc]
 
