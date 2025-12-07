@@ -31,7 +31,6 @@ def avg(a, b):
     b = np.asarray(b)
     return (a + b) / 2
 
-
 def log(msg):
     sys.stdout.write(msg + "\n")
     sys.stdout.flush()
@@ -188,7 +187,7 @@ def main():
     with open("scores_results.json", "w") as f:
         json.dump(final_answers, f, indent=2)
 
-    rocs = compute_roc_analysis(final_answers=final_answers, ensemble_funcs=[sum, min, max, avg, havg])
+    rocs = compute_roc_analysis(final_answers=final_answers, ensemble_funcs=[sum, min, max, avg])
     print(rocs)
 
     with open("roc_results.json", "w") as f:
