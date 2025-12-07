@@ -131,11 +131,7 @@ def main():
         
     final_answers = {}
     
-    count = 0
     for qid, q in queries.items():
-        if count > 0:
-            break # for testing only one query
-        count +=1
         
         final_answers[qid] = {}
         
