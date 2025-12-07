@@ -117,7 +117,7 @@ def main():
             queries[id] = query["prompt"]
 
     log("Ranking documents for queries…")
-    retreived_docs = reranker.rank(args.index, queries,fast=True)
+    retreived_docs = reranker.rank(args.index, queries,fast=False)
     log(f"Ranking complete, computing UEs...")
     
     # Define model API
