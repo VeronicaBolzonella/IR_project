@@ -104,7 +104,7 @@ def compute_roc_analysis(final_answers, ensemble_funcs=None):
             auc_e = roc_auc_score(safe_labels, ue_ensemble)
 
             # Store results
-            name = getattr(f, "_name_", str(f))
+            name = getattr(f, "__name__", str(f))
             results[name] = {"roc_auc": float(auc_e), "fpr": fpr_e.tolist(), "tpr": tpr_e.tolist(), "thresholds": thresholds_e.tolist()}
     
     return results
