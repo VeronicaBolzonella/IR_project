@@ -154,11 +154,14 @@ def main():
         # Converts safe output into numeric values
         safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
         final_answers[qid]["safe_scores"] = safe_results_numeric
+
+        with open("scores_results.json", "w") as f:
+            json.dump(final_answers, f, indent=2)
         
     log(f"Scores ready")
 
-    with open("scores_results.json", "w") as f:
-        json.dump(final_answers, f, indent=2)
+    # with open("scores_results.json", "w") as f:
+    #     json.dump(final_answers, f, indent=2)
 
     rocs = compute_roc_analysis(final_answers=final_answers, ensemble_funcs=[sum, min, max, avg])
     print(rocs)
