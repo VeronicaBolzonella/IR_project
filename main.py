@@ -134,9 +134,10 @@ def main():
     
     for qid, q in queries.items():
         count +=1
-        if count < 13 and count > 24:
+        if count < 13:
+            continue
+        if count > 24:
             break
-        
         try:
             
             final_answers[qid] = {}
