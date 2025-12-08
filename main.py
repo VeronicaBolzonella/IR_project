@@ -134,9 +134,9 @@ def main():
     
     for qid, q in queries.items():
         count +=1
-        if count < 25:
+        if count < 1:
             continue
-        if count > 36:
+        if count > 12:
             break
         
         try:
@@ -144,7 +144,7 @@ def main():
             final_answers[qid] = {}
             
             # Create prompt combining a query and the retrieved documents
-            prompt = create_augmented_prompt(q, retreived_docs[qid][0]) # for testing: using only one relevant document
+            prompt = create_augmented_prompt(q, retreived_docs[qid]) # for testing: using only one relevant document
             
             # Generate text with qwen and compute UEs for claims
             ue = generate_with_ue(prompt, model=model, seed=seed)  # model as str
