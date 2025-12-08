@@ -132,32 +132,36 @@ def main():
     final_answers = {}
     
     for qid, q in queries.items():
-        
-        final_answers[qid] = {}
-        
-        # Create prompt combining a query and the retrieved documents
-        prompt = create_augmented_prompt(q, retreived_docs[qid][0]) # for testing: using only one relevant document
-        
-        # Generate text with qwen and compute UEs for claims
-        ue = generate_with_ue(prompt, model=model, seed=seed)  # model as str
-        
-        
-        final_answers[qid]["ue1"] = [float(item[0]) for item in ue['normalized_truth_values'][0]]  
-        final_answers[qid]["ue2"] = [float(item[1]) for item in ue['normalized_truth_values'][0]] 
-        
-        # print("UE values computed:", final_answers[qid]["ue1"])
-        
-        claims = ue['claims']
-        # Runs safe model on each claim 
-        safe_results = [safe(atomic_fact=claim) for claim in claims]
-        
-        # Converts safe output into numeric values
-        safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
-        final_answers[qid]["safe_scores"] = safe_results_numeric
+        try:
+            
+            final_answers[qid] = {}
+            
+            # Create prompt combining a query and the retrieved documents
+            prompt = create_augmented_prompt(q, retreived_docs[qid][0]) # for testing: using only one relevant document
+            
+            # Generate text with qwen and compute UEs for claims
+            ue = generate_with_ue(prompt, model=model, seed=seed)  # model as str
+            
+            
+            final_answers[qid]["ue1"] = [float(item[0]) for item in ue['normalized_truth_values'][0]]  
+            final_answers[qid]["ue2"] = [float(item[1]) for item in ue['normalized_truth_values'][0]] 
+            
+            # print("UE values computed:", final_answers[qid]["ue1"])
+            
+            claims = ue['claims']
+            # Runs safe model on each claim 
+            safe_results = [safe(atomic_fact=claim) for claim in claims]
+            
+            # Converts safe output into numeric values
+            safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
+            final_answers[qid]["safe_scores"] = safe_results_numeric
 
-        with open("scores_results.json", "w") as f:
-            json.dump(final_answers, f, indent=2)
-        
+            with open("scores_results.json", "w") as f:
+                json.dump(final_answers, f, indent=2)
+        except Exception as e:
+            log(f"Error processing query {qid}: {e} \n Moving on to next query")
+            continue
+
     log(f"Scores ready")
 
     # with open("scores_results.json", "w") as f:
@@ -168,7 +172,6 @@ def main():
 
     with open("roc_results.json", "w") as f:
         json.dump(rocs, f, indent=2)
-    
     
 
 if __name__ == '__main__':
