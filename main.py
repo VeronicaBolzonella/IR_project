@@ -134,9 +134,9 @@ def main():
     
     for qid, q in queries.items():
         count +=1
-        if count < 23:
+        if count < 30:
             continue
-        if count > 30:
+        if count > 36:
             break
         
         try:
@@ -163,7 +163,7 @@ def main():
             safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
             final_answers[qid]["safe_scores"] = safe_results_numeric
 
-            with open("scores_results_23-30.json", "w") as f:
+            with open("scores_results_30-36.json", "w") as f:
                 json.dump(final_answers, f, indent=2)
                 
         except Exception as e:
