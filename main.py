@@ -134,9 +134,9 @@ def main():
     
     for qid, q in queries.items():
         count +=1
-        if count < 47:
+        if count < 1:
             continue
-        if count > 50:
+        if count > 5:
             break
         
         try:
@@ -149,21 +149,27 @@ def main():
             # Generate text with qwen and compute UEs for claims
             ue = generate_with_ue(prompt, model=model, seed=seed)  # model as str
             
+            # Extract Qwen generated text
+            final_answers[qid]['generated_test'] = ue['generated_text']
             
+            # Extract claims
+            claims = ue['claims']
+            final_answers[qid]['claims'] = claims
+            
+            # Compute UEs
             final_answers[qid]["ue1"] = [float(item[0]) for item in ue['normalized_truth_values'][0]]  
             final_answers[qid]["ue2"] = [float(item[1]) for item in ue['normalized_truth_values'][0]] 
+
             
-            # print("UE values computed:", final_answers[qid]["ue1"])
-            
-            claims = ue['claims']
             # Runs safe model on each claim 
             safe_results = [safe(atomic_fact=claim) for claim in claims]
+            final_answers[qid]["safe_results"] = safe_results
             
             # Converts safe output into numeric values
             safe_results_numeric = [- 1 if result["answer"] == None else 0 if "Not" in result["answer"] else 1 for result in safe_results]
             final_answers[qid]["safe_scores"] = safe_results_numeric
 
-            with open("scores_results_47-50.json", "w") as f:
+            with open("examples_first5.json", "w") as f:
                 json.dump(final_answers, f, indent=2)
                 
         except Exception as e:
